@@ -20,6 +20,9 @@ importers:
       '@nuxtjs/tailwindcss':
         specifier: 7.0.0-beta.1
         version: 7.0.0-beta.1(magicast@0.5.1)(vite@7.2.2(@types/node@24.10.1)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.1)(yaml@2.8.1))
+      '@parallel-web/ai-sdk-tools':
+        specifier: ^0.1.4
+        version: 0.1.4(ai@5.0.93(zod@4.1.12))
       '@tailwindcss/vite':
         specifier: ^4.1.17
         version: 4.1.17(vite@7.2.2(@types/node@24.10.1)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.1)(yaml@2.8.1))
@@ -1093,6 +1096,11 @@ packages:
     engines: {node: ^20.19.0 || >=22.12.0}
     cpu: [x64]
     os: [win32]
+
+  '@parallel-web/ai-sdk-tools@0.1.4':
+    resolution: {integrity: sha512-+/m61Zz1BllP4EeI1aIAWZeQUAxaBmSXCseZIYxJyKTwn8dQZhb0qMpiOpl4mZLaLSu3xp5u58Uruk1ZDDhNdA==}
+    peerDependencies:
+      ai: ^5.0.0
 
   '@parcel/watcher-android-arm64@2.5.1':
     resolution: {integrity: sha512-KF8+j9nNbUN8vzOFDpRMsaKBHZ/mcjEjMToVMJOhTozkDonQFFrRcfdLWn6yWKCmJKmdVxSgHiYvTCef4/qcBA==}
@@ -3977,6 +3985,9 @@ packages:
   packet-reader@1.0.0:
     resolution: {integrity: sha512-HAKu/fG3HpHFO0AA8WE8q2g+gBJaZ9MG7fcKk+IJPLTGAD6Psw4443l+9DGRbOIh3/aXr7Phy0TjilYivJo5XQ==}
 
+  parallel-web@0.2.4:
+    resolution: {integrity: sha512-684TtVFf0wvyZ83FMrhxX1Qg0+PDjsB7bPu0SXBCRVywxSeOloFIKHPKiAsAKWpDgAz3ok/bZmd2CAXImqH3Iw==}
+
   parent-module@1.0.1:
     resolution: {integrity: sha512-GQ2EWRpQV8/o+Aw8YqtfZZPfNRWZYkbidE9k5rpl/hC3vtHHBfGm2Ifi6qWV+coDGkrUKZAxE3Lot5kcsRlh+g==}
     engines: {node: '>=6'}
@@ -6477,6 +6488,12 @@ snapshots:
 
   '@oxc-transform/binding-win32-x64-msvc@0.96.0':
     optional: true
+
+  '@parallel-web/ai-sdk-tools@0.1.4(ai@5.0.93(zod@4.1.12))':
+    dependencies:
+      ai: 5.0.93(zod@4.1.12)
+      parallel-web: 0.2.4
+      zod: 3.25.76
 
   '@parcel/watcher-android-arm64@2.5.1':
     optional: true
@@ -9821,6 +9838,8 @@ snapshots:
   package-manager-detector@1.5.0: {}
 
   packet-reader@1.0.0: {}
+
+  parallel-web@0.2.4: {}
 
   parent-module@1.0.1:
     dependencies:
