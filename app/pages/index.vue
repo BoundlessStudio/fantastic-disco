@@ -151,7 +151,7 @@ watch(
 </script>
 
 <template>
-  <main class="min-h-screen bg-background">
+  <main class="relative min-h-screen bg-background">
     <div
       class="mx-auto flex min-h-screen w-full max-w-5xl flex-col px-4 py-10 md:px-8"
     >
@@ -215,7 +215,7 @@ watch(
 
           <div class="relative flex-1 overflow-hidden" ref="scrollParent">
             <ScrollArea class="h-full">
-              <div class="space-y-6 pr-6">
+              <div class="space-y-6 pr-6 pb-44">
                 <div
                   v-if="!hasMessages"
                   class="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-border/60 bg-muted/40 px-6 py-12 text-center text-muted-foreground"
@@ -303,10 +303,14 @@ watch(
             </ScrollArea>
           </div>
         </CardContent>
+      </Card>
+    </div>
 
-        <Separator />
-
-        <CardFooter class="flex-col items-stretch gap-4">
+    <div class="pointer-events-none fixed inset-x-0 bottom-0 z-50">
+      <div class="mx-auto w-full max-w-5xl px-4 pb-6 md:px-8">
+        <div
+          class="pointer-events-auto w-full rounded-3xl border border-border/60 bg-background/95 p-4 shadow-2xl backdrop-blur"
+        >
           <form class="flex w-full flex-col gap-3" @submit="handleSubmit">
             <Textarea
               v-model="input"
@@ -319,7 +323,7 @@ watch(
             >
               <p>
                 Shift + Enter adds a newline. The agent automatically decides
-                when to call weather or conversion tools.
+                when to call tools.
               </p>
               <Button type="submit" class="gap-2" :disabled="!canSend">
                 <Loader2 v-if="isStreaming" class="size-4 animate-spin" />
@@ -328,8 +332,8 @@ watch(
               </Button>
             </div>
           </form>
-        </CardFooter>
-      </Card>
+        </div>
+      </div>
     </div>
   </main>
 </template>
