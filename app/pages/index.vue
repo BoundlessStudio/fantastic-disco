@@ -46,14 +46,15 @@ const roleStyles: Record<string, RoleStyle> = {
       "bg-slate-100 text-slate-800 border border-slate-200 dark:bg-slate-800 dark:text-slate-50 dark:border-slate-700",
     avatar: "bg-slate-200 text-slate-800 dark:bg-slate-700 dark:text-slate-100",
   },
-  default: {
+};
+
+const getRoleStyle = (role: string) : RoleStyle =>  {
+  return roleStyles[role] ?? {
     label: "Core Agent",
     bubble: "bg-muted text-foreground border border-border/60",
     avatar: "bg-secondary text-secondary-foreground",
-  },
+  } as RoleStyle;
 };
-
-const getRoleStyle = (role: string) => roleStyles[role] ?? roleStyles.default;
 const getAvatarFallback = (role: string) => {
   if (role === "user") return "You";
   if (role === "assistant") return "AI";

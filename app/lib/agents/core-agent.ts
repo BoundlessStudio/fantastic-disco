@@ -36,7 +36,7 @@ export const CoreAgent = new Agent({
           };
         },
       }),
-      convertFahrenheitToCelsius: tool({
+      convert_fahrenheit_to_celsius: tool({
         description: 'Convert a temperature in fahrenheit to celsius',
         inputSchema: z.object({
           temperature: z
