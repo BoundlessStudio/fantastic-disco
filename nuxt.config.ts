@@ -10,15 +10,15 @@ export default defineNuxtConfig({
     openaiApiKey: '',
     mem0ApiKey: ''
   },
+  components: [
+    {
+      path: '~/app/components',
+      pathPrefix: false,
+      extensions: ['vue'], // only auto-register .vue files
+    },
+  ],
   shadcn: {
-    /**
-     * Prefix for all the imported component
-     */
     prefix: '',
-    /**
-     * Directory that the component lives in.
-     * @default "./components/ui"
-     */
-    componentDir: './components/ui'
+    componentDir: './app/components/ui',
   },
 })

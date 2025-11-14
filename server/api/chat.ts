@@ -1,5 +1,5 @@
 // import { convertToModelMessages, UIMessage, validateUIMessages } from 'ai';
-import { CoreAgent, CoreAgentUIMessage } from '@/agents/core-agent';
+import { CoreAgent, CoreAgentUIMessage } from '@/lib/agents/core-agent';
 
 export default defineLazyEventHandler(async () => {
 
