@@ -20,6 +20,22 @@ yarn install
 bun install
 ```
 
+## Auth0 configuration
+
+Authentication is now powered by Auth0. Provide the following environment variables in `.env` (see `.env.example` for placeholders):
+
+- `NUXT_PUBLIC_AUTH0_DOMAIN`
+- `NUXT_PUBLIC_AUTH0_CLIENT_ID`
+- `NUXT_PUBLIC_AUTH0_AUDIENCE` (optional, used when hitting custom APIs)
+
+After configuring Auth0, start the dev server and click **Sign in with Auth0** on the marketing page to reach the protected workspace.
+
+## Application routes
+
+- `/` &mdash; Public marketing/landing page with CTA buttons.
+- `/home` &mdash; Auth0-protected home dashboard that lists available agents.
+- `/chat` &mdash; Auth0-protected chat workspace (supports `?agent=<id>` to preselect an agent).
+
 ## Development Server
 
 Start the development server on `http://localhost:3000`:
