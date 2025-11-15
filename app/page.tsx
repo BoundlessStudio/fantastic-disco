@@ -120,108 +120,108 @@ const ChatBotDemo = () => {
   };
 
   return (
-    <div className="relative max-w-4xl mx-auto p-6 size-full h-screen">
-      <div className="flex flex-col h-full">
-        <Conversation className="h-full">
-          <ConversationContent>
-            {messages.map((message) => (
-              <div key={message.id}>
-                {message.role === 'assistant' &&
-                  message.parts.filter((part) => part.type === 'source-url')
-                    .length > 0 && (
-                    <Sources>
-                      <SourcesTrigger
-                        count={
-                          message.parts.filter(
-                            (part) => part.type === 'source-url',
-                          ).length
+    <div className="relative max-w-4xl mx-auto h-screen">
+      <Conversation className="h-screen overflow-hidden pb-40">
+        <ConversationContent className="h-screen">
+          {messages.map((message) => (
+            <div key={message.id}>
+              {message.role === 'assistant' &&
+                message.parts.filter((part) => part.type === 'source-url')
+                  .length > 0 && (
+                  <Sources>
+                    <SourcesTrigger
+                      count={
+                        message.parts.filter(
+                          (part) => part.type === 'source-url',
+                        ).length
+                      }
+                    />
+                    {message.parts
+                      .filter((part) => part.type === 'source-url')
+                      .map((part, i) => (
+                        <SourcesContent key={`${message.id}-${i}`}>
+                          <Source
+                            key={`${message.id}-${i}`}
+                            href={part.url}
+                            title={part.url}
+                          />
+                        </SourcesContent>
+                      ))}
+                  </Sources>
+                )}
+              {message.parts.map((part, i) => {
+                switch (part.type) {
+                  case 'text':
+                    return (
+                      <Message key={`${message.id}-${i}`} from={message.role}>
+                        <MessageContent>
+                          <MessageResponse>{part.text}</MessageResponse>
+                        </MessageContent>
+                        {message.role === 'assistant' &&
+                          message.id === messages.at(-1)?.id &&
+                          i === message.parts.length - 1 && (
+                            <MessageActions>
+                              <MessageAction
+                                onClick={() => regenerate()}
+                                label="Retry"
+                              >
+                                <RefreshCcwIcon className="size-3" />
+                              </MessageAction>
+                              <MessageAction
+                                onClick={() =>
+                                  navigator.clipboard.writeText(part.text)
+                                }
+                                label="Copy"
+                              >
+                                <CopyIcon className="size-3" />
+                              </MessageAction>
+                            </MessageActions>
+                          )}
+                      </Message>
+                    );
+                  case 'reasoning':
+                    return (
+                      <Reasoning
+                        key={`${message.id}-${i}`}
+                        className="w-full"
+                        isStreaming={
+                          status === 'streaming' &&
+                          i === message.parts.length - 1 &&
+                          message.id === messages.at(-1)?.id
                         }
-                      />
-                      {message.parts
-                        .filter((part) => part.type === 'source-url')
-                        .map((part, i) => (
-                          <SourcesContent key={`${message.id}-${i}`}>
-                            <Source
-                              key={`${message.id}-${i}`}
-                              href={part.url}
-                              title={part.url}
-                            />
-                          </SourcesContent>
-                        ))}
-                    </Sources>
-                  )}
-                {message.parts.map((part, i) => {
-                  switch (part.type) {
-                    case 'text':
-                      return (
-                        <Message key={`${message.id}-${i}`} from={message.role}>
-                          <MessageContent>
-                            <MessageResponse>{part.text}</MessageResponse>
-                          </MessageContent>
-                          {message.role === 'assistant' &&
-                            message.id === messages.at(-1)?.id &&
-                            i === message.parts.length - 1 && (
-                              <MessageActions>
-                                <MessageAction
-                                  onClick={() => regenerate()}
-                                  label="Retry"
-                                >
-                                  <RefreshCcwIcon className="size-3" />
-                                </MessageAction>
-                                <MessageAction
-                                  onClick={() =>
-                                    navigator.clipboard.writeText(part.text)
-                                  }
-                                  label="Copy"
-                                >
-                                  <CopyIcon className="size-3" />
-                                </MessageAction>
-                              </MessageActions>
-                            )}
-                        </Message>
-                      );
-                    case 'reasoning':
-                      return (
-                        <Reasoning
-                          key={`${message.id}-${i}`}
-                          className="w-full"
-                          isStreaming={
-                            status === 'streaming' &&
-                            i === message.parts.length - 1 &&
-                            message.id === messages.at(-1)?.id
-                          }
-                        >
-                          <ReasoningTrigger />
-                          <ReasoningContent>{part.text}</ReasoningContent>
-                        </Reasoning>
-                      );
-                    case 'tool-web-search':
-                    case 'tool-web-extract':
-                      return (
-                        <Tool
-                          key={part.toolCallId || `${message.id}-${i}`}
-                        >
-                          <ToolHeader type={part.type} state={part.state} />
-                          <ToolContent>
-                            <ToolInput input={part.input} />
-                            <ToolOutput
-                              output={JSON.stringify(part.output, null, 2)}
-                              errorText={part.errorText}
-                            />
-                          </ToolContent>
-                        </Tool>
-                      );
-                    default:
-                      return null;
-                  }
-                })}
-              </div>
-            ))}
-            {status === 'submitted' && <Loader />}
-          </ConversationContent>
-          <ConversationScrollButton />
-        </Conversation>
+                      >
+                        <ReasoningTrigger />
+                        <ReasoningContent>{part.text}</ReasoningContent>
+                      </Reasoning>
+                    );
+                  case 'tool-web-search':
+                  case 'tool-web-extract':
+                    return (
+                      <Tool
+                        key={part.toolCallId || `${message.id}-${i}`}
+                      >
+                        <ToolHeader type={part.type} state={part.state} />
+                        <ToolContent>
+                          <ToolInput input={part.input} />
+                          <ToolOutput
+                            output={JSON.stringify(part.output, null, 2)}
+                            errorText={part.errorText}
+                          />
+                        </ToolContent>
+                      </Tool>
+                    );
+                  default:
+                    return null;
+                }
+              })}
+            </div>
+          ))}
+          {status === 'submitted' && <Loader />}
+        </ConversationContent>
+        <ConversationScrollButton className='mb-40' />
+      </Conversation>
 
+      <div className="absolute bottom-0 left-0 w-full py-4">
         <PromptInput
           onSubmit={handleSubmit}
           globalDrop
