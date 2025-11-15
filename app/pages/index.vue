@@ -10,6 +10,7 @@ import {
   RotateCcw,
   Send,
   Sparkles,
+  PlugZap,
 } from "lucide-vue-next";
 
 const input = ref("");
@@ -67,6 +68,9 @@ const formatPartType = (type: string) =>
     .split("-")
     .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
     .join(" ");
+
+const isToolPart = (type?: string) =>
+  typeof type === "string" && type.startsWith("tool-");
 
 const isStreaming = computed(() =>
   ["submitted", "streaming"].includes(chat.status),
@@ -284,6 +288,36 @@ watch(
                             {{ part.text }}
                           </p>
                           <div v-else-if="part.type === 'step-start'"></div>
+                          <div v-else-if="isToolPart(part.type)" class="w-full">
+                            <Dialog>
+                              <DialogTrigger
+                                class="group inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-amber-800 transition hover:-translate-y-0.5 hover:bg-amber-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 dark:border-amber-500/60 dark:bg-amber-500/15 dark:text-amber-50"
+                              >
+                                <PlugZap
+                                  class="size-4 text-amber-700 transition group-hover:text-amber-900 dark:text-amber-200 dark:group-hover:text-amber-50"
+                                />
+                                <span>{{ formatPartType(part.type) }}</span>
+                                <span
+                                  class="text-[10px] font-medium uppercase tracking-normal text-amber-700/80 dark:text-amber-100/80"
+                                >
+                                  View details
+                                </span>
+                              </DialogTrigger>
+                              <DialogContent class="max-w-2xl space-y-4">
+                                <DialogHeader class="space-y-1">
+                                  <DialogTitle>
+                                    {{ formatPartType(part.type) }}
+                                  </DialogTitle>
+                                  <DialogDescription>
+                                    Full payload shared with the tool.
+                                  </DialogDescription>
+                                </DialogHeader>
+                                <pre
+                                  class="max-h-[65vh] overflow-auto rounded-lg border border-border/50 bg-muted/40 p-4 text-xs leading-relaxed"
+                                >{{ JSON.stringify(part, null, 2) }}</pre>
+                              </DialogContent>
+                            </Dialog>
+                          </div>
                           <div v-else class="space-y-1 text-sm">
                             <p
                               class="text-xs font-semibold uppercase tracking-wide text-muted-foreground/80"
