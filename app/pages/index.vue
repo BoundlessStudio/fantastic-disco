@@ -181,13 +181,8 @@ watch(
           <div class="flex flex-col gap-2">
             <CardTitle class="flex items-center gap-2 text-2xl">
               <Sparkles class="size-5 text-primary" />
-              Core Agent Chat
+              Agent Chat
             </CardTitle>
-            <CardDescription>
-              Powered by Vercel AI SDK and shadcn-vue components. Ask questions,
-              brainstorm ideas, or let the agent reach for tools like weather
-              and unit conversion.
-            </CardDescription>
           </div>
 
           <CardAction class="flex items-center gap-2">
