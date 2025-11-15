@@ -122,7 +122,7 @@ const ChatBotDemo = () => {
   return (
     <div className="relative max-w-4xl mx-auto h-screen">
       <Conversation className="h-screen overflow-hidden pb-40">
-        <ConversationContent className="h-screen">
+        <ConversationContent className="">
           {messages.map((message) => (
             <div key={message.id}>
               {message.role === 'assistant' &&
