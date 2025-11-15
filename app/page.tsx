@@ -21,7 +21,6 @@ import {
   PromptInputAttachment,
   PromptInputAttachments,
   PromptInputBody,
-  PromptInputButton,
   PromptInputHeader,
   type PromptInputMessage,
   PromptInputSelect,
@@ -34,9 +33,9 @@ import {
   PromptInputFooter,
   PromptInputTools,
 } from '@/components/ai-elements/prompt-input';
-import { Fragment, useState } from 'react';
+import { useState } from 'react'; // Fragment
 import { useChat } from '@ai-sdk/react';
-import { CopyIcon, GlobeIcon, RefreshCcwIcon } from 'lucide-react';
+import { CopyIcon, RefreshCcwIcon } from 'lucide-react';
 import {
   Source,
   Sources,
@@ -48,6 +47,13 @@ import {
   ReasoningContent,
   ReasoningTrigger,
 } from '@/components/ai-elements/reasoning';
+import {
+  Tool,
+  ToolContent,
+  ToolHeader,
+  ToolInput,
+  ToolOutput,
+} from '@/components/ai-elements/tool';
 import { Loader } from '@/components/ai-elements/loader';
 
 const models = [
@@ -61,10 +67,34 @@ const models = [
   },
 ];
 
+const tools = [
+  {
+    name: 'Auto',
+    value: 'auto',
+  },
+  {
+    name: 'None',
+    value: 'none',
+  },
+  {
+    name: 'Required',
+    value: 'required',
+  },
+  {
+    name: 'Web Search',
+    value: 'web-search',
+  },
+  {
+    name: 'Web Extract',
+    value: 'web-extract',
+  },
+];
+
 const ChatBotDemo = () => {
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState('find arcades where i live.');
   const [model, setModel] = useState<string>(models[0].value);
-  const [webSearch, setWebSearch] = useState(false);
+  const [tool, setTool] = useState<string>(tools[0].value);
+  //const [webSearch, setWebSearch] = useState(false);
   const { messages, sendMessage, status, regenerate } = useChat();
 
   const handleSubmit = (message: PromptInputMessage) => {
@@ -83,7 +113,7 @@ const ChatBotDemo = () => {
       {
         body: {
           model: model,
-          webSearch: webSearch,
+          choice: tool,
         },
       },
     );
@@ -158,6 +188,20 @@ const ChatBotDemo = () => {
                           <ReasoningContent>{part.text}</ReasoningContent>
                         </Reasoning>
                       );
+                    case 'tool-web-search' :
+                    case 'tool-web-extract' :
+                       return (
+                        <Tool key={part.toolCallId || `${message.id}-${i}`}>
+                          <ToolHeader type={part.type} state={part.state} />
+                          <ToolContent>
+                            <ToolInput input={part.input} />
+                            <ToolOutput
+                              output={JSON.stringify(part.output, null, 2)}
+                              errorText={part.errorText}
+                            />
+                          </ToolContent>
+                        </Tool>
+                      );
                     default:
                       return null;
                   }
@@ -189,13 +233,6 @@ const ChatBotDemo = () => {
                   <PromptInputActionAddAttachments />
                 </PromptInputActionMenuContent>
               </PromptInputActionMenu>
-              <PromptInputButton
-                variant={webSearch ? 'default' : 'ghost'}
-                onClick={() => setWebSearch(!webSearch)}
-              >
-                <GlobeIcon size={16} />
-                <span>Search</span>
-              </PromptInputButton>
               <PromptInputSelect
                 onValueChange={(value) => {
                   setModel(value);
@@ -203,12 +240,29 @@ const ChatBotDemo = () => {
                 value={model}
               >
                 <PromptInputSelectTrigger>
-                  <PromptInputSelectValue />
+                  Model: <PromptInputSelectValue />
                 </PromptInputSelectTrigger>
                 <PromptInputSelectContent>
-                  {models.map((model) => (
-                    <PromptInputSelectItem key={model.value} value={model.value}>
-                      {model.name}
+                  {models.map((m) => (
+                    <PromptInputSelectItem key={m.value} value={m.value}>
+                      {m.name}
+                    </PromptInputSelectItem>
+                  ))}
+                </PromptInputSelectContent>
+              </PromptInputSelect>
+              <PromptInputSelect
+                onValueChange={(value) => {
+                  setTool(value);
+                }}
+                value={tool}
+              >
+                <PromptInputSelectTrigger>
+                  Tool: <PromptInputSelectValue />
+                </PromptInputSelectTrigger>
+                <PromptInputSelectContent>
+                  {tools.map((t) => (
+                    <PromptInputSelectItem key={t.value} value={t.value}>
+                      {t.name}
                     </PromptInputSelectItem>
                   ))}
                 </PromptInputSelectContent>
