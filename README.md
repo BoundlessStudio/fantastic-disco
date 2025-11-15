@@ -1,48 +1,36 @@
-# Nuxt Example
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-This example demonstrates how to use the `auth0-server-js` package to authenticate users in a Nuxt application.
+## Getting Started
 
-## Install dependencies
-
-Install the dependencies using npm:
+First, run the development server:
 
 ```bash
-npm install
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
 ```
 
-## Configuration
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-Rename `.env.example` to `.env` and configure the domain and audience:
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-```ts
-NUXT_AUTH0_DOMAIN=YOUR_AUTH0_DOMAIN
-NUXT_AUTH0_CLIENT_ID=YOUR_AUTH0_CLIENT_ID
-NUXT_AUTH0_CLIENT_SECRET=YOUR_AUTH0_CLIENT_SECRET
-NUXT_AUTH0_SESSION_SECRET=YOUR_AUTH0_SESSION_SECRET
-NUXT_AUTH0_APP_BASE_URL=http://localhost:3000
-```
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-The `NUXT_AUTH0_SESSION_SECRET` is the key used to encrypt the session cookie. You can generate a secret using `openssl`:
+## Learn More
 
-```shell
-openssl rand -hex 64
-```
+To learn more about Next.js, take a look at the following resources:
 
-The `NUXT_AUTH0_APP_BASE_URL` is the URL that your application is running on. When developing locally, this is most commonly `http://localhost:3000`.
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-With the configuration in place, the example can be started by running:
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-```bash
-npm run start
-``` 
+## Deploy on Vercel
 
-The application has 3 routes:
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-- `/`: The home route, displaying a message depending on the authentication state.
-- `/public`: A public route that can be accessed without authentication.
-- `/private`: A private route that can only be accessed by authenticated users.
-
-
-In order to access the `/private` and route, you need to ensure the user is authenticated.
-
-Additionally, navigating to the `/private` endpoint, without being authenticated, will redirect the user to the Auth0, and then redirect them back to the `/private` route after authentication.
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
