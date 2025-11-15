@@ -193,16 +193,6 @@ watch(
               <Loader2 v-if="isStreaming" class="size-3 animate-spin" />
               {{ statusLabel }}
             </Badge>
-            <Button
-              variant="outline"
-              size="sm"
-              type="button"
-              class="gap-1"
-              @click="resetConversation"
-            >
-              <RotateCcw class="size-4" />
-              Reset
-            </Button>
           </CardAction>
         </CardHeader>
 
@@ -369,11 +359,24 @@ watch(
                 Shift + Enter adds a newline. The agent automatically decides
                 when to call tools.
               </p>
-              <Button type="submit" class="gap-2" :disabled="!canSend">
-                <Loader2 v-if="isStreaming" class="size-4 animate-spin" />
-                <Send v-else class="size-4" />
-                {{ isStreaming ? "Sending" : "Send" }}
-              </Button>
+              <div class="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  type="button"
+                  class="text-muted-foreground hover:text-foreground"
+                  :disabled="isStreaming"
+                  @click="resetConversation"
+                >
+                  <RotateCcw class="size-4" />
+                  <span class="sr-only">Reset conversation</span>
+                </Button>
+                <Button type="submit" class="gap-2" :disabled="!canSend">
+                  <Loader2 v-if="isStreaming" class="size-4 animate-spin" />
+                  <Send v-else class="size-4" />
+                  {{ isStreaming ? "Sending" : "Send" }}
+                </Button>
+              </div>
             </div>
           </form>
         </div>
