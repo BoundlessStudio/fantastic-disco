@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { Chat } from "@ai-sdk/vue";
 import { computed, nextTick, onMounted, ref, watch } from "vue";
+import MarkdownIt from "markdown-it";
+import createDOMPurify from "isomorphic-dompurify";
 import { cn } from "@/lib/utils";
 import type { CoreAgentUIMessage } from "@/lib/agents/core-agent";
 import type { BadgeVariants } from "@/components/ui/badge";
@@ -71,6 +73,21 @@ const formatPartType = (type: string) =>
 
 const isToolPart = (type?: string) =>
   typeof type === "string" && type.startsWith("tool-");
+
+const markdownRenderer = new MarkdownIt({
+  html: false,
+  linkify: true,
+  breaks: true,
+});
+
+const DOMPurify = createDOMPurify(
+  typeof window === "undefined" ? undefined : window,
+);
+
+const renderMarkdown = (content?: string) => {
+  if (!content) return "";
+  return DOMPurify.sanitize(markdownRenderer.render(content));
+};
 
 const isStreaming = computed(() =>
   ["submitted", "streaming"].includes(chat.status),
@@ -281,12 +298,11 @@ watch(
                           :key="`${message.id ?? index}-${part.type}-${partIndex}`"
                           class="space-y-2"
                         >
-                          <p
+                          <div
                             v-if="part.type === 'text'"
-                            class="whitespace-pre-wrap text-base leading-7"
-                          >
-                            {{ part.text }}
-                          </p>
+                            class="markdown-body space-y-4 text-base leading-7 [&>pre]:rounded-lg [&>pre]:bg-muted/50 [&>pre]:p-3 [&>pre]:text-xs [&>pre]:font-mono [&>code]:rounded-md [&>code]:bg-muted/60 [&>code]:px-1.5 [&>code]:py-0.5 [&>ul]:list-disc [&>ul]:pl-5 [&>ol]:list-decimal [&>ol]:pl-5"
+                            v-html="renderMarkdown(part.text)"
+                          />
                           <div v-else-if="part.type === 'step-start'"></div>
                           <div v-else-if="isToolPart(part.type)" class="w-full">
                             <Dialog>
