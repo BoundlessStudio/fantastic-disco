@@ -174,7 +174,7 @@ watch(
 <template>
   <main class="relative min-h-screen bg-background">
     <div
-      class="mx-auto flex min-h-screen w-full max-w-5xl flex-col px-4 py-10 md:px-8"
+      class="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-10 md:px-8"
     >
       <Card class="flex min-h-[75vh] flex-1 flex-col overflow-hidden">
         <CardHeader>
@@ -247,8 +247,7 @@ watch(
                       Start a conversation
                     </p>
                     <p class="text-sm">
-                      The agent chats naturally and taps tools like the weather
-                      or temperature conversion when your prompt requires it.
+                      The agent chats naturally and taps tools when your prompt requires it.
                     </p>
                   </div>
                 </div>
@@ -364,8 +363,8 @@ watch(
           <form class="flex w-full flex-col gap-3" @submit="handleSubmit">
             <Textarea
               v-model="input"
-              class="min-h-[120px] resize-none text-base"
-              placeholder="Ask the assistant for help, share context, or request a tool call..."
+              class="resize-none text-base"
+              placeholder=""
               @keydown="handleKeydown"
             />
             <div
