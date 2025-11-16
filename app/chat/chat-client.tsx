@@ -120,8 +120,8 @@ const ChatClient = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto">
-      <Conversation className="h-[calc(100dvh-240px)] overflow-hidden">
+    <div className="">
+      <Conversation className="h-[calc(100dvh-240px)]">
         <ConversationContent className="">
           {messages.map((message) => (
             <div key={message.id}>
@@ -216,7 +216,6 @@ const ChatClient = () => {
               })}
             </div>
           ))}
-          {status === 'submitted' && <Loader />}
         </ConversationContent>
         <ConversationScrollButton />
       </Conversation>

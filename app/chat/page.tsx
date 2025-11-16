@@ -1,12 +1,13 @@
+// app/chat/page.tsx
 import ChatClient from "./chat-client";
-import { auth0 } from "@/lib/auth0";
+import { withAuth } from "@/lib/with-auth";
 
-const Page = () => (
-  <section className="h-full w-full p-2">
-    <ChatClient />
-  </section>
-);
+async function Page() {
+  return (
+    <section className="h-full w-full p-2 max-w-7xl mx-auto">
+      <ChatClient />
+    </section>
+  );
+}
 
-export default auth0.withPageAuthRequired(Page, {
-  returnTo: "/chat",
-});
+export default withAuth(Page, { returnTo: "/chat" });
