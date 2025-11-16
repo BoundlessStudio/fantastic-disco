@@ -9,6 +9,10 @@ export async function proxy(request: NextRequest) {
     return authRes;
   }
 
+  if (request.nextUrl.pathname === "/" || request.nextUrl.pathname.startsWith("/public")) {
+    return NextResponse.next();
+  }
+
   // Do not pass the request and let the package handle getting the cookies
   const session = await auth0.getSession();
 
