@@ -187,7 +187,7 @@ const toolChoices = [
 
 const suggestions = [
   'find arcades where i live.',
-  'what are some rainy-day date ideas?',
+  'what do you see in the image?',
   'summarize the latest AI news.',
 ];
 
@@ -356,7 +356,7 @@ const buildConfirmationApproval = (
 };
 
 const ChatBotDemo = () => {
-  const [input, setInput] = useState('find arcades where i live.');
+  const [input, setInput] = useState('');
   const [model, setModel] = useState<string>(models[0].id);
   const [tool, setTool] = useState<string>(toolChoices[0].value);
   const [useMicrophone, setUseMicrophone] = useState<boolean>(false);
@@ -420,17 +420,14 @@ const ChatBotDemo = () => {
       index === message.parts.length - 1;
 
     switch (part.type) {
-      case 'file' :
-        return (
-          <Message key={`${message.id}-file-${index}`} from={message.role}>
-            <MessageContent>
-              <MessageAttachment data={part} key={part.url} />
-            </MessageContent>
-          </Message>
-        );
+      case 'source-document':
+        return null;
+      case 'source-url':
+        return null;
+      
       case 'text':
         return (
-          <Message key={`${message.id}-text-${index}`} from={message.role}>
+          <div key={`${message.id}-text-${index}`}>
             <MessageContent>
               <MessageResponse>{part.text}</MessageResponse>
             </MessageContent>
@@ -447,9 +444,14 @@ const ChatBotDemo = () => {
                 </MessageAction>
               </MessageActions>
             )}
-          </Message>
+          </div>
         );
+      case 'file' :
+        return (
+          
+            <MessageAttachment data={part} key={part.url} />
 
+        );
       case 'reasoning':
         return (
           <Reasoning
@@ -807,31 +809,15 @@ const ChatBotDemo = () => {
       <Conversation className="h-full overflow-hidden pb-50">
         <ConversationContent>
           {typedMessages.map((message) => {
-            const sourceParts =
-              message.role === 'assistant'
-                ? message.parts.filter(isSourceUrlPart)
-                : [];
-
             return (
               <div key={message.id} className="mb-2">
-                {sourceParts.length > 0 && (
-                  <Sources className="mb-1">
-                    <SourcesTrigger count={sourceParts.length} />
-                    {sourceParts.map((part, sourceIndex) => (
-                      <SourcesContent key={`${message.id}-source-${sourceIndex}`}>
-                        <Source
-                          href={part.url}
-                          title={part.title ?? part.url}
-                        />
-                      </SourcesContent>
-                    ))}
-                  </Sources>
-                )}
-
-                {/* Main message parts */}
-                {message.parts.map((part, partIndex) =>
-                  renderPart(message, part, partIndex),
-                )}
+                <Message key={`${message.id}`} from={message.role}>
+                  <MessageContent>
+                  {message.parts.map((part, partIndex) =>
+                    renderPart(message, part, partIndex),
+                  )}
+                  </MessageContent>
+                </Message>
               </div>
             );
           })}
