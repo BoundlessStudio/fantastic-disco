@@ -8,6 +8,7 @@ export type ImageProps = Experimental_GeneratedImage & {
 
 export const Image = ({
   base64,
+  // oxlint-disable-next-line no-unused-vars
   uint8Array,
   mediaType,
   ...props

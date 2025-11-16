@@ -697,6 +697,7 @@ export const PromptInput = ({
 
     // Convert blob URLs to data URLs asynchronously
     Promise.all(
+      // oxlint-disable-next-line no-unused-vars
       files.map(async ({ id, ...item }) => {
         if (item.url && item.url.startsWith("blob:")) {
           return {
@@ -729,6 +730,7 @@ export const PromptInput = ({
             controller.textInput.clear();
           }
         }
+      // oxlint-disable-next-line no-unused-vars
       } catch (error) {
         // Don't clear on error - user may want to retry
       }

@@ -54,7 +54,7 @@ import {
   ToolInput,
   ToolOutput,
 } from '@/components/ai-elements/tool';
-import { Loader } from '@/components/ai-elements/loader';
+// import { Loader } from '@/components/ai-elements/loader';
 
 const models = [
   {

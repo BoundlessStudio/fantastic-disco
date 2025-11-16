@@ -4,9 +4,9 @@ import { auth0 } from "@/lib/auth0";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 
-type AppPage<P = {}> = (props: P) => ReactNode | Promise<ReactNode>;
+type AppPage<P = object> = (props: P) => ReactNode | Promise<ReactNode>;
 
-export function withAuth<P = {}>(
+export function withAuth<P = object>(
   Page: AppPage<P>,
   { returnTo = "/" }: { returnTo?: string } = {}
 ): (props: P) => Promise<ReactNode> {

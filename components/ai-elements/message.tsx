@@ -216,7 +216,9 @@ export type MessageBranchSelectorProps = HTMLAttributes<HTMLDivElement> & {
 };
 
 export const MessageBranchSelector = ({
+  // oxlint-disable-next-line no-unused-vars
   className,
+  // oxlint-disable-next-line no-unused-vars
   from,
   ...props
 }: MessageBranchSelectorProps) => {
@@ -263,6 +265,7 @@ export type MessageBranchNextProps = ComponentProps<typeof Button>;
 
 export const MessageBranchNext = ({
   children,
+  // oxlint-disable-next-line no-unused-vars
   className,
   ...props
 }: MessageBranchNextProps) => {
