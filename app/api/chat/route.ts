@@ -40,12 +40,12 @@ export async function POST(req: Request) {
     'web-search': searchTool,
     'web-extract': extractTool,
     'image_generation': openai.tools.imageGeneration({ 
-      outputFormat: 'webp'
+      outputFormat: 'webp',
     }),
     'code_interpreter': openai.tools.codeInterpreter({
       // container: ''
     }),
-    local_shell: openai.tools.localShell({
+    'local_shell': openai.tools.localShell({
       execute: async ({ action }) => {
         // ... your implementation, e.g. sandbox access ...
         return { output: "" };
@@ -62,7 +62,7 @@ export async function POST(req: Request) {
       async execute({ city, unit } /* , { abortSignal, messages }*/) {
         const weather = await getWeather({ city, unit });
         return weather;
-      },
+      }
     }),
   } as ToolSet;
 

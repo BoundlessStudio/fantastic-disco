@@ -501,6 +501,31 @@ const ChatClient = () => {
         return null;
       case 'source-url':
         return null;
+      case 'tool-image_generation':
+        return (
+          <div key={`${message.id}-tool-${index}`}>
+            <Tool>
+              <ToolHeader type={part.type} state={part.state} />
+              <ToolContent>
+                <ToolInput input={part.input} />
+                <ToolOutput
+                  output={part.output}
+                  errorText={part.errorText}
+                />
+              </ToolContent>
+            </Tool>
+            { part.state === "output-available" && (
+            <MessageAttachments>
+              <MessageAttachment className='size-40' data={{
+                  type: "file",
+                  url: "data:image/webp;base64," + (part.output as {result: string}).result,
+                  mediaType: "image/webp",
+                  filename: "image.webp"
+                }} />
+            </MessageAttachments>
+            )}
+          </div>
+        );
       case 'tool-weather':
         return (
           (part.state == 'output-available') ?
