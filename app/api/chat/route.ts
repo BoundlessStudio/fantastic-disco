@@ -1,22 +1,13 @@
-import { createMem0 } from "@mem0/vercel-ai-provider";
+import { retrieveMemories, addMemories } from "@mem0/vercel-ai-provider";
 import { openai } from '@ai-sdk/openai';
 import { searchTool, extractTool } from '@parallel-web/ai-sdk-tools';
 import { streamText, ToolChoice, UIMessage, convertToModelMessages, ToolSet, stepCountIs, tool } from 'ai';
+import { convertModelToV2Prompt } from "@/lib/convertModelToV2Prompt";
 import { auth0 } from "@/lib/auth0";
 import { z } from 'zod';
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
-
-const mem0 = createMem0({
-  provider: "openai",                          // or "anthropic" / "google" / etc.
-  mem0ApiKey: process.env.MEM0_API_KEY!,       // Mem0 platform key: m0-xxxx
-  apiKey: process.env.OPENAI_API_KEY!,         // your OpenAI (or provider) key
-  // optional global Mem0 config
-  mem0Config: {
-    enable_graph: false,                       // optional
-  },
-});
 
 async function getWeather(params: { city: string, unit: string }) {
   await new Promise(resolve => setTimeout(resolve, 3000));
@@ -42,6 +33,9 @@ export async function POST(req: Request) {
     choice: string;
   } = await req.json();
 
+  const session = await auth0.getSession();
+
+  
   const tools = {
     'web-search': searchTool,
     'web-extract': extractTool,
@@ -51,12 +45,12 @@ export async function POST(req: Request) {
     'code_interpreter': openai.tools.codeInterpreter({
       // container: ''
     }),
-    // local_shell: openai.tools.localShell({
-    //   execute: async ({ action }) => {
-    //     // ... your implementation, e.g. sandbox access ...
-    //     return { output: stdout };
-    //   },
-    // }),
+    local_shell: openai.tools.localShell({
+      execute: async ({ action }) => {
+        // ... your implementation, e.g. sandbox access ...
+        return { output: "" };
+      },
+    }),
     'weather': tool({
       description: 'Get the current weather.',
       inputSchema: z.object({
@@ -72,13 +66,21 @@ export async function POST(req: Request) {
     }),
   } as ToolSet;
 
-  const session = await auth0.getSession();
-  
+  const modelMessages = convertToModelMessages(messages, { tools })
+
+  let instructions = 'You are a helpful assistant that can answer questions and help with tasks';
+  if(session) {
+    instructions = await retrieveMemories(instructions, { user_id: session?.user.sub });
+    const msg = convertModelToV2Prompt(modelMessages);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    addMemories(msg as any, { user_id: session?.user.sub });
+  }
+
   const result = streamText({
-    model: session ? mem0(model, { user_id: session?.user.sub }) : openai(model),
-    messages: convertToModelMessages(messages),
+    model: openai(model),
+    messages: modelMessages,
     stopWhen: stepCountIs(10),
-    system: 'You are a helpful assistant that can answer questions and help with tasks',
+    system: instructions,
     tools: tools,
     activeTools: ['web-search', 'web-extract', 'weather', 'image_generation'],
     toolChoice: choice as ToolChoice<typeof tools>,

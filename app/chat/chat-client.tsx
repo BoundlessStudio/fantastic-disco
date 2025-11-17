@@ -422,7 +422,7 @@ const WeatherCard = ({ weather }: WeatherCardProps) => {
 const ChatClient = () => {
 
   const [input, setInput] = useState('');
-  const [model, setModel] = useState<string>(models[0].id);
+  const [model, setModel] = useState<string>(models[1].id);
   const [tool, setTool] = useState<string>(toolChoices[0].value);
   const [modelSelectorOpen, setModelSelectorOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -897,7 +897,7 @@ const ChatClient = () => {
             return (
               <div key={message.id} className="mb-2">
                 <Message key={`${message.id}`} from={message.role}  >
-                  <MessageContent>
+                  <MessageContent className={message.role === 'assistant' ? 'w-full': ''}>
                   {message.parts.map((part, partIndex) =>
                     renderPart(message, part, partIndex),
                   )}
