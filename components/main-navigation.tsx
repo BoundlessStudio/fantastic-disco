@@ -14,12 +14,6 @@ export async function MainNavigation() {
           BoundlessAI
         </Link>
         <nav className="flex items-center gap-3 text-sm font-medium">
-          <Link href="/#features" className="text-muted-foreground hover:text-foreground">
-            Features
-          </Link>
-          <Link href="/#pricing" className="text-muted-foreground hover:text-foreground">
-            Pricing
-          </Link>
           {isAuthenticated ? (
             <>
               <Link

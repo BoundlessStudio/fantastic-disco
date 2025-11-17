@@ -35,6 +35,7 @@ import {
   PromptInputFooter,
   PromptInputTools,
   PromptInputButton,
+  PromptInputSpeechButton 
 } from '@/components/ai-elements/prompt-input';
 import {
   Source,
@@ -139,10 +140,10 @@ import {
   ModelSelectorTrigger,
 } from '@/components/ai-elements/model-selector';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useChat } from '@ai-sdk/react';
 import type { FileUIPart, UIMessage } from 'ai';
-import { CheckIcon, CopyIcon, MicIcon, RefreshCcwIcon } from 'lucide-react';
+import { CheckIcon, CopyIcon, MicIcon, RefreshCcwIcon, Sun  } from 'lucide-react';
 import { auth0 } from "@/lib/auth0";
 
 // You can expand this to the full multi-provider shape like in the example if you want
@@ -150,6 +151,13 @@ const models = [
   {
     id: 'gpt-5.1',
     name: 'GPT 5.1',
+    chef: 'OpenAI',
+    chefSlug: 'openai',
+    providers: ['openai'],
+  },
+  {
+    id: 'gpt-5',
+    name: 'GPT 5',
     chef: 'OpenAI',
     chefSlug: 'openai',
     providers: ['openai'],
@@ -184,10 +192,15 @@ const toolChoices = [
     name: 'Web Extract',
     value: 'web-extract',
   },
+  {
+    name: 'Weather',
+    value: 'weather',
+  },
 ];
 
 const suggestions = [
   'find arcades where i live.',
+  'what is the weather where i live?',
   'what do you see in the image?',
   'summarize the latest AI news.',
 ];
@@ -351,18 +364,73 @@ const buildConfirmationApproval = (
   return { id: approvalId };
 };
 
+async function dataUrlToBlob(dataUrl: string): Promise<Blob> {
+  const res = await fetch(dataUrl);
+  return await res.blob();
+}
+
+async function uploadBlobToStorage(
+  blob: Blob,
+  filename?: string,
+): Promise<string> {
+  const formData = new FormData();
+  formData.append('file', blob, filename ?? 'attachment');
+
+  const res = await fetch('/api/upload', {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!res.ok) {
+    throw new Error('Upload failed');
+  }
+
+  const { url } = await res.json();
+  return url as string;
+}
+
+type Weather = {
+  temperature: string;
+  unit: string;
+  forecast: string;
+};
+
+interface WeatherCardProps {
+  weather: Weather;
+}
+
+const WeatherCard = ({ weather }: WeatherCardProps) => {
+  const { temperature, unit, forecast } = weather;
+
+   return (
+    <div className="relative rounded-lg border p-4 flex flex-col gap-2 bg-gradient-to-br from-sky-100 to-sky-300 overflow-hidden">
+      {/* Sun Icon */}
+      <Sun
+        className="absolute right-3 top-3 h-10 w-10 text-yellow-500 opacity-70 pointer-events-none"
+        strokeWidth={2}
+      />
+
+      <div className="text-xl font-semibold">
+        {temperature}°{unit}
+      </div>
+
+      <div className="text-muted-foreground">{forecast}</div>
+    </div>
+  );
+}
+
 const ChatClient = () => {
 
   const [input, setInput] = useState('');
   const [model, setModel] = useState<string>(models[0].id);
   const [tool, setTool] = useState<string>(toolChoices[0].value);
-  const [useMicrophone, setUseMicrophone] = useState<boolean>(false);
   const [modelSelectorOpen, setModelSelectorOpen] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const { messages, sendMessage, status, regenerate, stop } = useChat();
   const typedMessages = messages as ExtendedMessage[];
 
-  const handleSubmit = (message: PromptInputMessage) => {
+  const handleSubmit = async (message: PromptInputMessage) => {
     if (status === 'streaming') {
       stop();
       return;
@@ -374,10 +442,31 @@ const ChatClient = () => {
       return;
     }
 
+    let files: FileUIPart[] | undefined = message.files;
+    if (message.files && message.files.length > 0) {
+      files = await Promise.all(
+        message.files.map(async (file) => {
+          // Already a blob URL or external URL: keep as-is
+          if (!file.url.startsWith('data:')) 
+            return file;
+
+          const blob = await dataUrlToBlob(file.url);
+          const uploadedUrl = await uploadBlobToStorage(blob, file.filename ?? 'attachment');
+
+          return {
+            type: 'file',
+            mediaType: file.mediaType,
+            filename: file.filename,
+            url: uploadedUrl,
+          } as FileUIPart;
+        }),
+      );
+    }
+
     sendMessage(
       {
         text: message.text || 'Sent with attachments',
-        files: message.files,
+        files: files,
       },
       {
         body: {
@@ -412,6 +501,18 @@ const ChatClient = () => {
         return null;
       case 'source-url':
         return null;
+      case 'tool-weather':
+        return (
+          (part.state == 'output-available') ?
+            <WeatherCard key={`${message.id}-tool-${index}`} weather={part.output as Weather} />
+          :
+          <Tool key={`${message.id}-tool-${index}`}>
+              <ToolHeader type={part.type} state={part.state} />
+              <ToolContent className="">
+                <ToolInput input={part.input} />
+              </ToolContent>
+            </Tool>
+          );
       case 'tool-web-search':
       case 'tool-web-extract':
         return (
@@ -795,7 +896,7 @@ const ChatClient = () => {
           {typedMessages.map((message) => {
             return (
               <div key={message.id} className="mb-2">
-                <Message key={`${message.id}`} from={message.role}>
+                <Message key={`${message.id}`} from={message.role}  >
                   <MessageContent>
                   {message.parts.map((part, partIndex) =>
                     renderPart(message, part, partIndex),
@@ -827,7 +928,7 @@ const ChatClient = () => {
           className="border-0 shadow-none"
         >
           <PromptInputHeader>
-            <PromptInputAttachments>
+            <PromptInputAttachments >
               {(attachment) => (
                 <PromptInputAttachment data={attachment} />
               )}
@@ -836,6 +937,7 @@ const ChatClient = () => {
           <PromptInputBody>
             <PromptInputTextarea
               onChange={(e) => setInput(e.target.value)}
+              ref={textareaRef}
               value={input}
             />
           </PromptInputBody>
@@ -844,19 +946,15 @@ const ChatClient = () => {
               <PromptInputActionMenu>
                 <PromptInputActionMenuTrigger />
                 <PromptInputActionMenuContent>
-                  <PromptInputActionAddAttachments />
+                  <PromptInputActionAddAttachments/>
                 </PromptInputActionMenuContent>
               </PromptInputActionMenu>
 
-              {/* Microphone toggle (UI only) */}
-              <PromptInputButton
-                onClick={() => setUseMicrophone(!useMicrophone)}
-                variant={useMicrophone ? 'default' : 'ghost'}
-              >
-                <MicIcon size={16} />
-                <span className="sr-only">Microphone</span>
-              </PromptInputButton>
 
+              <PromptInputSpeechButton
+                onTranscriptionChange={setInput}
+                textareaRef={textareaRef}
+              />
 
               {/* Model Selector (AI Elements) */}
               <ModelSelector
