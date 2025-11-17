@@ -11,7 +11,7 @@
   "dependencies": {
     "@ai-sdk/openai": "^3.0.0-beta.59",
     "@ai-sdk/react": "^3.0.0-beta.99",
-    "@auth0/nextjs-auth0": "^4.12.1",
+    "@auth0/nextjs-auth0": "^4.13.0",
     "@azure/storage-blob": "^12.29.1",
     "@mem0/vercel-ai-provider": "^2.0.4",
     "@parallel-web/ai-sdk-tools": "^0.1.4",
@@ -58,9 +58,6 @@
     "typescript": "^5"
   },
   "overrides": {
-    "@auth0/nextjs-auth0": {
-      "next": "16.0.3"
-    },
     "@parallel-web/ai-sdk-tools": {
       "ai": "6.0.0-beta.99",
       "@ai-sdk/react": "3.0.0-beta.99"
