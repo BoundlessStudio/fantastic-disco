@@ -144,7 +144,7 @@ import { useState, useRef } from 'react';
 import { useChat } from '@ai-sdk/react';
 import type { FileUIPart, UIMessage } from 'ai';
 import { CheckIcon, CopyIcon, MicIcon, RefreshCcwIcon, Sun  } from 'lucide-react';
-import { auth0 } from "@/lib/auth0";
+
 
 // You can expand this to the full multi-provider shape like in the example if you want
 const models = [
@@ -169,6 +169,20 @@ const models = [
     chefSlug: 'openai',
     providers: ['openai'],
   },
+  {
+    id: 'sonar',
+    name: 'Sonar',
+    chef: 'Perplexity',
+    chefSlug: 'perplexity',
+    providers: ['perplexity'],
+  },
+  {
+    id: 'sonar-pro',
+    name: 'Sonar Pro',
+    chef: 'Perplexity',
+    chefSlug: 'perplexity',
+    providers: ['perplexity'],
+  },
 ];
 
 const toolChoices = [
@@ -186,15 +200,23 @@ const toolChoices = [
   },
   {
     name: 'Web Search',
-    value: 'web-search',
+    value: 'web_search',
   },
   {
     name: 'Web Extract',
-    value: 'web-extract',
+    value: 'web_extract',
   },
   {
     name: 'Weather',
     value: 'weather',
+  },
+  {
+    name: 'Image Generation',
+    value: 'image_generation',
+  },
+  {
+    name: 'Code Interpreter',
+    value: 'code_interpreter',
   },
 ];
 
@@ -430,6 +452,8 @@ const ChatClient = () => {
   const { messages, sendMessage, status, regenerate, stop } = useChat();
   const typedMessages = messages as ExtendedMessage[];
 
+  const selectedModel = models.find((m) => m.id === model);
+
   const handleSubmit = async (message: PromptInputMessage) => {
     if (status === 'streaming') {
       stop();
@@ -470,7 +494,8 @@ const ChatClient = () => {
       },
       {
         body: {
-          model,
+          model: selectedModel?.id,
+          provider: selectedModel?.chefSlug,
           choice: tool,
         },
       },
@@ -482,8 +507,7 @@ const ChatClient = () => {
     setInput(suggestion);
   };
 
-  const selectedModel = models.find((m) => m.id === model);
-
+  
   
   // Helper: render one part using all AI Elements we know about
   const renderPart = (
@@ -497,10 +521,23 @@ const ChatClient = () => {
       index === message.parts.length - 1;
 
     switch (part.type) {
-      case 'source-document':
-        return null;
-      case 'source-url':
-        return null;
+      case 'tool-code_interpreter':
+          return (
+            <Tool key={`${message.id}-tool-${index}`}>
+              <ToolHeader type={part.type} state={part.state} />
+              <ToolContent>
+                <ToolInput input={part.input} />
+                <ToolOutput
+                  output={
+                    part.output
+                      ? JSON.stringify(part.output, null, 2)
+                      : undefined
+                  }
+                  errorText={part.errorText}
+                />
+              </ToolContent>
+            </Tool>
+          );
       case 'tool-image_generation':
         return (
           <div key={`${message.id}-tool-${index}`}>
@@ -538,8 +575,8 @@ const ChatClient = () => {
               </ToolContent>
             </Tool>
           );
-      case 'tool-web-search':
-      case 'tool-web-extract':
+      case 'tool-web_search':
+      case 'tool-web_extract':
         return (
             <Tool key={`${message.id}-tool-${index}`}>
               <ToolHeader type={part.type} state={part.state} />
@@ -627,7 +664,6 @@ const ChatClient = () => {
           </ChainOfThought>
         );
       }
-
       case 'checkpoint':
         return (
           <Checkpoint
@@ -922,7 +958,34 @@ const ChatClient = () => {
             return (
               <div key={message.id} className="mb-2">
                 <Message key={`${message.id}`} from={message.role}  >
+                  
                   <MessageContent className={message.role === 'assistant' ? 'w-full': ''}>
+                    
+                    {message.role === 'assistant' &&
+                      message.parts.filter((part) => part.type === 'source-url')
+                        .length > 0 && (
+                        <Sources>
+                          <SourcesTrigger
+                            count={
+                              message.parts.filter(
+                                (part) => part.type === 'source-url',
+                              ).length
+                            }
+                          />
+                          {message.parts
+                            .filter((part) => part.type === 'source-url')
+                            .map((part, i) => (
+                              <SourcesContent key={`${message.id}-${i}`}>
+                                <Source
+                                  key={`${message.id}-${i}`}
+                                  href={part.url}
+                                  title={part.url}
+                                />
+                              </SourcesContent>
+                            ))}
+                        </Sources>
+                      )}
+
                   {message.parts.map((part, partIndex) =>
                     renderPart(message, part, partIndex),
                   )}
@@ -1002,7 +1065,7 @@ const ChatClient = () => {
                   <ModelSelectorInput placeholder="Search models..." />
                   <ModelSelectorList>
                     <ModelSelectorEmpty>No models found.</ModelSelectorEmpty>
-                    {['OpenAI'].map((chef) => (
+                    {['OpenAI', 'Perplexity'].map((chef) => (
                       <ModelSelectorGroup key={chef} heading={chef}>
                         {models
                           .filter((m) => m.chef === chef)

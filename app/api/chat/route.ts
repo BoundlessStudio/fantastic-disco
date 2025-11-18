@@ -1,7 +1,8 @@
 import { retrieveMemories, addMemories } from "@mem0/vercel-ai-provider";
 import { openai } from '@ai-sdk/openai';
+import { perplexity } from '@ai-sdk/perplexity';
 import { searchTool, extractTool } from '@parallel-web/ai-sdk-tools';
-import { streamText, ToolChoice, UIMessage, convertToModelMessages, ToolSet, stepCountIs, tool } from 'ai';
+import { streamText, ToolChoice, UIMessage, convertToModelMessages, ToolSet, stepCountIs, tool, LanguageModel } from 'ai';
 import { convertModelToV2Prompt } from "@/lib/convertModelToV2Prompt";
 import { auth0 } from "@/lib/auth0";
 import { z } from 'zod';
@@ -21,15 +22,28 @@ async function getWeather(params: { city: string, unit: string }) {
   };
 }
 
+function getModel(provider: string, model: string) {
+    switch (provider) {
+    case "perplexity":
+      return perplexity(model)
+    case "openai":
+      return openai(model);
+    default:
+      return openai("gpt-4.1")
+  }
+}
+
 
 export async function POST(req: Request) {
   const {
     messages,
     model,
+    provider,
     choice,
   }: { 
     messages: UIMessage[]; 
     model: string; 
+    provider: string;
     choice: string;
   } = await req.json();
 
@@ -37,20 +51,20 @@ export async function POST(req: Request) {
 
   
   const tools = {
-    'web-search': searchTool,
-    'web-extract': extractTool,
+    'web_search': searchTool,
+    'web_extract': extractTool,
     'image_generation': openai.tools.imageGeneration({ 
       outputFormat: 'webp',
     }),
     'code_interpreter': openai.tools.codeInterpreter({
       // container: ''
     }),
-    'local_shell': openai.tools.localShell({
-      execute: async ({ action }) => {
-        // ... your implementation, e.g. sandbox access ...
-        return { output: "" };
-      },
-    }),
+    // 'local_shell': openai.tools.localShell({
+    //   execute: async ({ action }) => {
+    //     // ... your implementation, e.g. sandbox access ...
+    //     return { output: "" };
+    //   },
+    // }),
     'weather': tool({
       description: 'Get the current weather.',
       inputSchema: z.object({
@@ -62,7 +76,7 @@ export async function POST(req: Request) {
       async execute({ city, unit } /* , { abortSignal, messages }*/) {
         const weather = await getWeather({ city, unit });
         return weather;
-      }
+      },
     }),
   } as ToolSet;
 
@@ -77,18 +91,20 @@ export async function POST(req: Request) {
   }
 
   const result = streamText({
-    model: openai(model),
-    messages: modelMessages,
-    stopWhen: stepCountIs(10),
+    abortSignal: req.signal,
+    model: getModel(provider, model),
+    stopWhen: stepCountIs(5),
     system: instructions,
     tools: tools,
-    activeTools: ['web-search', 'web-extract', 'weather', 'image_generation'],
     toolChoice: choice as ToolChoice<typeof tools>,
-    abortSignal: req.signal,
+    messages: modelMessages,
     providerOptions: {
       openai: {
         reasoningEffort: 'high', 
         reasoningSummary: 'detailed', 
+      },
+      perplexity: {
+        // return_images: true,
       },
     }
   });
