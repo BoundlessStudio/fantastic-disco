@@ -48,7 +48,6 @@ export async function POST(req: Request) {
   } = await req.json();
 
   const session = await auth0.getSession();
-
   
   const tools = {
     'web_search': searchTool,
