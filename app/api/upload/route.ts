@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
-import { BlobServiceClient, StorageSharedKeyCredential  } from '@azure/storage-blob';
+import { uploadContainerClient } from "@/lib/fileStorage"
 
 export const runtime = 'nodejs';
+
 
 // POST /api/upload
 export async function POST(req: Request) {
@@ -21,24 +22,12 @@ export async function POST(req: Request) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Blob storage setup
-    const account = process.env.AZURE_STORAGE_ACCOUNT_NAME!;
-    const key = process.env.AZURE_STORAGE_ACCOUNT_KEY!;
-    const container = process.env.AZURE_STORAGE_CONTAINER!;
-
-    const blobServiceClient = new BlobServiceClient(
-      `https://${account}.blob.core.windows.net`,
-      new StorageSharedKeyCredential (account, key)
-    );
-
-    const containerClient = blobServiceClient.getContainerClient(container);
-
     // Create filename
     //const ext = file.name.split('.').pop() ?? '';
     //const blobName = `${Date.now()}-${crypto.randomUUID()}.${ext}`;
     const blobName = `${crypto.randomUUID()}-${file.name}`;
 
-    const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+    const blockBlobClient = uploadContainerClient.getBlockBlobClient(blobName);
 
     // Upload buffer
     await blockBlobClient.upload(buffer, buffer.length, {

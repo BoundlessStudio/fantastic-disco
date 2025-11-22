@@ -1,12 +1,7 @@
-import ChatClient from "@/app/chat/chat-client";
-import { withAuth } from "@/lib/with-auth";
+import { nanoid } from "nanoid";
+import { redirect } from "next/navigation";
 
-async function Page() {
-  return (
-    <section className="h-[calc(100%-75px)] w-full p-2 max-w-6xl mx-auto ">
-      <ChatClient />
-    </section>
-  );
+export default function ChatIndex() {
+  const id = nanoid();
+  redirect(`/chat/${id}`);
 }
-
-export default withAuth(Page, { returnTo: "/chat" });

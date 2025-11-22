@@ -1,4 +1,5 @@
 'use client';
+import { nanoid } from 'nanoid';
 
 import {
   Conversation,
@@ -284,8 +285,12 @@ const WeatherCard = ({ weather }: WeatherCardProps) => {
   );
 }
 
-const ChatClient = () => {
+type ChatClientProps = {
+  thread?: string;
+};
 
+const ChatClient: React.FC<ChatClientProps> = ({thread}) => {
+  const [threadId ] = useState<string>(thread ?? nanoid()); // setThreadId
   const [input, setInput] = useState('');
   const [model, setModel] = useState<string>(models[1].id);
   const [tool, setTool] = useState<string>(toolChoices[0].value);
@@ -337,6 +342,7 @@ const ChatClient = () => {
       },
       {
         body: {
+          thread: threadId,
           model: selectedModel?.id,
           provider: selectedModel?.chefSlug,
           choice: tool,
