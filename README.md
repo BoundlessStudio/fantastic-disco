@@ -1,4 +1,7 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Fantastic Disco
+
+TODO List:
+- Add Open AI Shell Tool + Cloudflare Sandbox SDK (this need to be in a WORKER)
 
 ## Getting Started
 
