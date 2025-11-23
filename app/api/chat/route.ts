@@ -25,9 +25,9 @@ export const maxDuration = 60;
 type InputDto = { 
   messages: UIMessage[]; 
   thread: string,
-  model: string; 
-  provider: string;
-  choice: string;
+  model: string,
+  choice: string,
+  thinking: string,
 }
 
 type WeatherData = {

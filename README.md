@@ -1,7 +1,7 @@
 # Fantastic Disco
 
 TODO List:
-- Add Open AI Shell Tool + Cloudflare Sandbox SDK
+- Add Open AI Shell Tool + Cloudflare Sandbox SDK (this need to be in a WORKER)
 
 ## Getting Started
 
