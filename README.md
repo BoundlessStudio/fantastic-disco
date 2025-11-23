@@ -1,7 +1,7 @@
 # Fantastic Disco
 
 TODO List:
-- Upload Files as URL into base64
+- Add Open AI Shell Tool + Cloudflare Sandbox SDK
 
 ## Getting Started
 

@@ -1,7 +1,6 @@
 // api/chat/route.ts
 import { retrieveMemories, addMemories } from "@mem0/vercel-ai-provider";
 import { openai } from '@ai-sdk/openai';
-import { perplexity } from '@ai-sdk/perplexity';
 import { searchTool, extractTool } from '@parallel-web/ai-sdk-tools';
 import {
   streamText,
@@ -49,17 +48,6 @@ async function getWeather(params: { city: string, unit: string }): Promise<Weath
   };
 }
 
-function getModel(provider: string, model: string) {
-  switch (provider) {
-    case "perplexity":
-      return perplexity(model)
-    case "openai":
-      return openai(model);
-    default:
-      return openai("gpt-4.1")
-  }
-}
-
 async function getInstructions(modelMessages: ModelMessage[]) {
   return 'You are a helpful assistant that can answer questions and help with tasks.';
 }
@@ -81,7 +69,7 @@ export async function POST(req: Request) {
     messages,
     thread,
     model,
-    provider,
+    thinking,
     choice,
   }: InputDto = await req.json();
   
@@ -96,6 +84,17 @@ export async function POST(req: Request) {
     "code_interpreter": openai.tools.codeInterpreter({
       container: containerId
     }),
+    // "local_shell": openai.tools.localShell({
+    //   async execute({ action }) {
+    //     // action.command
+    //     // action.env
+    //     // action.timeoutMs
+    //     // action.type
+    //     // action.user
+    //     // action.workingDirectory
+    //     return { output: "" };
+    //   },
+    // }),
     'weather': tool({
       description: 'Get the current weather.',
       inputSchema: z.object({
@@ -121,7 +120,7 @@ export async function POST(req: Request) {
 
   const result = streamText({
     abortSignal: req.signal,
-    model: getModel(provider, model),
+    model: openai(model),
     stopWhen: stepCountIs(5),
     system: instructions,
     tools: tools,
@@ -129,11 +128,8 @@ export async function POST(req: Request) {
     messages: modelMessages,
     providerOptions: {
       openai: {
-        reasoningEffort: 'high', 
-        reasoningSummary: 'detailed', 
-      },
-      perplexity: {
-        // return_images: true,
+        reasoningEffort: thinking,
+        reasoningSummary: 'auto',
       },
     },
     experimental_transform: [

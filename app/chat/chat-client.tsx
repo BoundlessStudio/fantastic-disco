@@ -191,7 +191,6 @@ type BaseMessage = UIMessage<ChatMessageMetadata>;
 type BaseMessagePart = BaseMessage['parts'][number];
 
 type ChatClientProps = {
-  models: Model[],
   thread?: string
 };
 
@@ -238,20 +237,6 @@ const models = [
     provider: 'openai',
     model: "gpt-5-codex",
     contextLength: 400_000,
-  },
-  {
-    id: 'perplexity/sonar',
-    name: 'Sonar',
-    provider: 'perplexity',
-    model: "sonar",
-    contextLength: 128_000,
-  },
-  {
-    id: 'perplexity/sonar-pro',
-    name: 'Sonar Pro',
-    provider: 'perplexity',
-    model: "sonar-pro",
-    contextLength: 200_000,
   },
 ];
 
@@ -329,6 +314,25 @@ const toolChoices = [
   },
 ];
 
+const effort = [
+  {
+    name: 'Instance',
+    value: 'none'
+  },
+  {
+    name: 'Low Reasoning',
+    value: 'low'
+  },
+  {
+    name: 'Medium Reasoning',
+    value: 'medium'
+  },
+  {
+    name: 'High Reasoning',
+    value: 'high'
+  }
+];
+
 const suggestions = [
   'find arcades where i live.',
   'what is the weather where i live?',
@@ -397,6 +401,7 @@ const ChatClient: React.FC<ChatClientProps> = ({thread}) => {
   const [input, setInput] = useState('Create a dataset of birthrate of Cats and Dogs for the last 10 years and graph the results.');
   const [model, setModel] = useState<string>(models[0].id);
   const [tool, setTool] = useState<string>(toolChoices[0].value);
+  const [reasoning, setReasoning] = useState<string>(effort[0].value);
   const [modelSelectorOpen, setModelSelectorOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -451,8 +456,8 @@ const ChatClient: React.FC<ChatClientProps> = ({thread}) => {
         body: {
           thread: threadId,
           model: selectedModel?.model,
-          provider: selectedModel?.provider,
           choice: tool,
+          thinking: reasoning
         },
       },
     );
@@ -808,7 +813,7 @@ const ChatClient: React.FC<ChatClientProps> = ({thread}) => {
                   <ModelSelectorInput placeholder="Search models..." />
                   <ModelSelectorList>
                     <ModelSelectorEmpty>No models found.</ModelSelectorEmpty>
-                    {['openai', 'perplexity'].map((provider) => (
+                    {['openai'].map((provider) => (
                       <ModelSelectorGroup key={provider} heading={provider}>
                         {models
                           .filter((m) => m.provider === provider)
@@ -836,7 +841,29 @@ const ChatClient: React.FC<ChatClientProps> = ({thread}) => {
                 </ModelSelectorContent>
               </ModelSelector>
 
-              {/* Tool-choice dropdown (kept from your original) */}
+              {/* Reasoning dropdown */}
+              <PromptInputSelect
+                onValueChange={(value) => {
+                  setReasoning(value);
+                }}
+                value={reasoning}
+              >
+                <PromptInputSelectTrigger>
+                  <PromptInputSelectValue />
+                </PromptInputSelectTrigger>
+                <PromptInputSelectContent>
+                  {effort.map((t) => (
+                    <PromptInputSelectItem
+                      key={t.value}
+                      value={t.value}
+                    >
+                      {t.name}
+                    </PromptInputSelectItem>
+                  ))}
+                </PromptInputSelectContent>
+              </PromptInputSelect>
+
+              {/* Tool-choice dropdown */}
               <PromptInputSelect
                 onValueChange={(value) => {
                   setTool(value);
