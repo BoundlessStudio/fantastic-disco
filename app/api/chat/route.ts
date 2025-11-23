@@ -81,7 +81,7 @@ export async function POST(req: Request) {
     messages,
     thread,
     model,
-    //provider,
+    provider,
     choice,
   }: InputDto = await req.json();
   

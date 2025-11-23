@@ -195,45 +195,65 @@ type ChatClientProps = {
   thread?: string
 };
 
-
 // You can expand this to the full multi-provider shape like in the example if you want
-// const models = [
-//   {
-//     id: 'gpt-5.1',
-//     name: 'GPT 5.1',
-//     chef: 'OpenAI',
-//     chefSlug: 'openai',
-//     providers: ['openai'],
-//   },
-//   {
-//     id: 'gpt-5',
-//     name: 'GPT 5',
-//     chef: 'OpenAI',
-//     chefSlug: 'openai',
-//     providers: ['openai'],
-//   },
-//   {
-//     id: 'gpt-4o',
-//     name: 'GPT 4o',
-//     chef: 'OpenAI',
-//     chefSlug: 'openai',
-//     providers: ['openai'],
-//   },
-//   {
-//     id: 'sonar',
-//     name: 'Sonar',
-//     chef: 'Perplexity',
-//     chefSlug: 'perplexity',
-//     providers: ['perplexity'],
-//   },
-//   {
-//     id: 'sonar-pro',
-//     name: 'Sonar Pro',
-//     chef: 'Perplexity',
-//     chefSlug: 'perplexity',
-//     providers: ['perplexity'],
-//   },
-// ];
+const models = [
+  {
+    id: 'openai/gpt-5.1',
+    name: 'GPT 5.1',
+    provider: 'openai',
+    model: "gpt-5.1",
+    contextLength: 400_000,
+  },
+  {
+    id: 'openai/gpt-5.1-codex',
+    name: 'GPT 5.1 codex',
+    provider: 'openai',
+    model: "gpt-5.1-codex",
+    contextLength: 400_000,
+  },
+  {
+    id: 'openai/gpt-5',
+    name: 'GPT 5',
+    provider: 'openai',
+    model: "gpt-5-2025-08-07",
+    contextLength: 400_000,
+  },
+  {
+    id: 'openai/gpt-5-mini',
+    name: 'GPT 5 mini',
+    provider: 'openai',
+    model: "gpt-5-mini-2025-08-07",
+    contextLength: 400_000,
+  },
+  {
+    id: 'openai/gpt-5-nano',
+    name: 'GPT 5 nano',
+    provider: 'openai',
+    model: "gpt-5-nano-2025-08-07",
+    contextLength: 400_000,
+  },
+  {
+    id: 'openai/gpt-5-codex',
+    name: 'GPT 5 codex',
+    provider: 'openai',
+    model: "gpt-5-codex",
+    contextLength: 400_000,
+  },
+  {
+    id: 'perplexity/sonar',
+    name: 'Sonar',
+    provider: 'perplexity',
+    model: "sonar",
+    contextLength: 128_000,
+  },
+  {
+    id: 'perplexity/sonar-pro',
+    name: 'Sonar Pro',
+    provider: 'perplexity',
+    model: "sonar-pro",
+    contextLength: 200_000,
+  },
+];
 
 const toolChoiceGroups = {
   default: [
@@ -371,7 +391,7 @@ const WeatherCard = ({ weather }: WeatherCardProps) => {
   );
 }
 
-const ChatClient: React.FC<ChatClientProps> = ({thread, models}) => {
+const ChatClient: React.FC<ChatClientProps> = ({thread}) => {
   const [threadId ] = useState<string>(thread ?? nanoid()); // setThreadId
   const [usage, setUsage] = useState<TokenUsage>();
   const [input, setInput] = useState('Create a dataset of birthrate of Cats and Dogs for the last 10 years and graph the results.');
@@ -430,8 +450,8 @@ const ChatClient: React.FC<ChatClientProps> = ({thread, models}) => {
       {
         body: {
           thread: threadId,
-          model: selectedModel?.id,
-          //provider: selectedModel?.chefSlug,
+          model: selectedModel?.model,
+          provider: selectedModel?.provider,
           choice: tool,
         },
       },
@@ -456,18 +476,7 @@ const ChatClient: React.FC<ChatClientProps> = ({thread, models}) => {
       index === message.parts.length - 1;
 
     switch (part.type) {
-      // case 'source-document':
-      //   return (
-      //     <div key={`${message.id}-${index}`}>
-      //       <a href={`${process.env.APP_BASE_URL}/api/download?container=${part?.providerMetadata?.openai?.containerId}&file=${part?.providerMetadata?.openai?.fileId}`} >{part.title}</a>
-      //     </div>
-      //   )
-      // case 'source-url':
-      //   return (
-      //     <div key={`${message.id}-${index}`}>
-      //       <a href={part.url} >{part.title}</a>
-      //     </div>
-      //   )
+
       case 'tool-code_interpreter':
           return (
             <Tool key={`${message.id}-tool-${index}`}>
@@ -785,8 +794,8 @@ const ChatClient: React.FC<ChatClientProps> = ({thread, models}) => {
               >
                 <ModelSelectorTrigger asChild>
                   <PromptInputButton>
-                    {selectedModel?.chefSlug && (
-                      <ModelSelectorLogo provider={selectedModel.chefSlug} />
+                    {selectedModel?.provider && (
+                      <ModelSelectorLogo provider={selectedModel.provider} />
                     )}
                     {selectedModel?.name && (
                       <ModelSelectorName>
@@ -799,10 +808,10 @@ const ChatClient: React.FC<ChatClientProps> = ({thread, models}) => {
                   <ModelSelectorInput placeholder="Search models..." />
                   <ModelSelectorList>
                     <ModelSelectorEmpty>No models found.</ModelSelectorEmpty>
-                    {['OpenAI', 'Perplexity'].map((chef) => (
-                      <ModelSelectorGroup key={chef} heading={chef}>
+                    {['openai', 'perplexity'].map((provider) => (
+                      <ModelSelectorGroup key={provider} heading={provider}>
                         {models
-                          .filter((m) => m.chef === chef)
+                          .filter((m) => m.provider === provider)
                           .map((m) => (
                             <ModelSelectorItem
                               key={m.id}
@@ -812,16 +821,8 @@ const ChatClient: React.FC<ChatClientProps> = ({thread, models}) => {
                               }}
                               value={m.id}
                             >
-                              <ModelSelectorLogo provider={m.chefSlug} />
+                              <ModelSelectorLogo provider={m.provider} />
                               <ModelSelectorName>{m.name}</ModelSelectorName>
-                              <ModelSelectorLogoGroup>
-                                {m.providers.map((provider) => (
-                                  <ModelSelectorLogo
-                                    key={provider}
-                                    provider={provider}
-                                  />
-                                ))}
-                              </ModelSelectorLogoGroup>
                               {model === m.id ? (
                                 <CheckIcon className="ml-auto size-4" />
                               ) : (
