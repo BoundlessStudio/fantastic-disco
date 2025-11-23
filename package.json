@@ -15,6 +15,7 @@
     "@auth0/nextjs-auth0": "^4.13.0",
     "@azure/storage-blob": "^12.29.1",
     "@mem0/vercel-ai-provider": "^2.0.4",
+    "@openrouter/sdk": "^0.1.27",
     "@parallel-web/ai-sdk-tools": "^0.1.4",
     "@radix-ui/react-collapsible": "^1.1.12",
     "@radix-ui/react-dialog": "^1.1.15",

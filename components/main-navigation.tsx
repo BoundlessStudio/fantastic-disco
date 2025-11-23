@@ -20,7 +20,7 @@ export async function MainNavigation() {
                 href="/chat"
                 className="rounded-full border border-black/10 px-4 py-2 text-foreground transition hover:bg-black hover:text-white"
               >
-                Open Chat
+                New Chat
               </Link>
               <Link
                 prefetch={false}

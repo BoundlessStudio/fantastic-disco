@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { auth0 } from "@/lib/auth0";
 import ChatClient from "@/app/chat/chat-client";
+import { OpenRouter } from "@openrouter/sdk";
 
 const stats = [
   { label: "Requests automated / day", value: "45K+" },
@@ -43,9 +44,13 @@ const plans = [
   },
 ];
 
+const openRouter = new OpenRouter();
+
 export default async function Page() {
   const session = await auth0.getSession();
   const isAuthenticated = Boolean(session?.user);
+  const {data} = await openRouter.models.list();
+
 
   return (
     <div className="space-y-24 bg-gradient-to-b from-white via-white to-slate-50 pb-24">
@@ -86,7 +91,7 @@ export default async function Page() {
           <p className="text-sm uppercase tracking-wide text-white/70">Live preview</p>
           <h2 className="mt-2 text-3xl font-semibold">BoundlessAI Copilot</h2>
           <div className="mt-6 h-[600px] rounded-xl border border-white/20 text-black bg-white">
-             <ChatClient />
+             <ChatClient models={data} />
           </div>
         </div>
       </section>

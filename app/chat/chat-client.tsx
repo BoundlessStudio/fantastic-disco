@@ -1,5 +1,7 @@
 'use client';
-import { nanoid } from 'nanoid';
+import { useState, useRef } from 'react';
+import { CheckIcon, CopyIcon, RefreshCcwIcon, Sun  } from 'lucide-react';
+import Image from "next/image";
 
 import {
   Conversation,
@@ -140,53 +142,137 @@ import {
   ModelSelectorName,
   ModelSelectorTrigger,
 } from '@/components/ai-elements/model-selector';
+import { 
+  Context, 
+  ContextCacheUsage, 
+  ContextContent, 
+  ContextContentBody, 
+  ContextContentFooter, 
+  ContextContentHeader, 
+  ContextInputUsage, 
+  ContextOutputUsage, 
+  ContextReasoningUsage, 
+  ContextTrigger 
+} from '@/components/ai-elements/context';
 
-import { useState, useRef } from 'react';
+import { CodeBlock } from '@/components/ai-elements/code-block';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { Model } from '@openrouter/sdk/models';
 import { useChat } from '@ai-sdk/react';
 import type { FileUIPart, UIMessage } from 'ai';
-import { CheckIcon, CopyIcon, RefreshCcwIcon, Sun  } from 'lucide-react';
+import { nanoid } from 'nanoid';
 
-type BaseMessage = UIMessage;
+
+
+
+type CodeInterpreterOutput =
+| { type: "image"; url: string }
+| { type: "logs"; logs: string };
+
+type CodeInterpreterResult = {
+  outputs?: CodeInterpreterOutput[] | null;
+};
+
+type TokenUsage = {
+  totalTokens?: number;
+  inputTokens?: number;
+  outputTokens?: number;
+  reasoningTokens?: number;
+  cachedInputTokens?: number;
+}
+
+type ChatMessageMetadata = {
+  usage: TokenUsage
+};
+
+// type BaseMessage = UIMessage;
+// type BaseMessagePart = BaseMessage['parts'][number];
+type BaseMessage = UIMessage<ChatMessageMetadata>;
 type BaseMessagePart = BaseMessage['parts'][number];
 
+type ChatClientProps = {
+  models: Model[],
+  thread?: string
+};
+
+
 // You can expand this to the full multi-provider shape like in the example if you want
-const models = [
-  {
-    id: 'gpt-5.1',
-    name: 'GPT 5.1',
-    chef: 'OpenAI',
-    chefSlug: 'openai',
-    providers: ['openai'],
-  },
-  {
-    id: 'gpt-5',
-    name: 'GPT 5',
-    chef: 'OpenAI',
-    chefSlug: 'openai',
-    providers: ['openai'],
-  },
-  {
-    id: 'gpt-4o',
-    name: 'GPT 4o',
-    chef: 'OpenAI',
-    chefSlug: 'openai',
-    providers: ['openai'],
-  },
-  {
-    id: 'sonar',
-    name: 'Sonar',
-    chef: 'Perplexity',
-    chefSlug: 'perplexity',
-    providers: ['perplexity'],
-  },
-  {
-    id: 'sonar-pro',
-    name: 'Sonar Pro',
-    chef: 'Perplexity',
-    chefSlug: 'perplexity',
-    providers: ['perplexity'],
-  },
-];
+// const models = [
+//   {
+//     id: 'gpt-5.1',
+//     name: 'GPT 5.1',
+//     chef: 'OpenAI',
+//     chefSlug: 'openai',
+//     providers: ['openai'],
+//   },
+//   {
+//     id: 'gpt-5',
+//     name: 'GPT 5',
+//     chef: 'OpenAI',
+//     chefSlug: 'openai',
+//     providers: ['openai'],
+//   },
+//   {
+//     id: 'gpt-4o',
+//     name: 'GPT 4o',
+//     chef: 'OpenAI',
+//     chefSlug: 'openai',
+//     providers: ['openai'],
+//   },
+//   {
+//     id: 'sonar',
+//     name: 'Sonar',
+//     chef: 'Perplexity',
+//     chefSlug: 'perplexity',
+//     providers: ['perplexity'],
+//   },
+//   {
+//     id: 'sonar-pro',
+//     name: 'Sonar Pro',
+//     chef: 'Perplexity',
+//     chefSlug: 'perplexity',
+//     providers: ['perplexity'],
+//   },
+// ];
+
+const toolChoiceGroups = {
+  default: [
+    {
+      name: 'Auto',
+      value: 'auto',
+    },
+    {
+      name: 'None',
+      value: 'none',
+    },
+    {
+      name: 'Required',
+      value: 'required',
+    },
+  ],
+  tools: [
+    {
+      name: 'Web Search',
+      value: 'web_search',
+    },
+    {
+      name: 'Web Extract',
+      value: 'web_extract',
+    },
+    {
+      name: 'Weather',
+      value: 'weather',
+    },
+    {
+      name: 'Image Generation',
+      value: 'image_generation',
+    },
+    {
+      name: 'Code Interpreter',
+      value: 'code_interpreter',
+    },
+  ]
+};
 
 const toolChoices = [
   {
@@ -285,20 +371,21 @@ const WeatherCard = ({ weather }: WeatherCardProps) => {
   );
 }
 
-type ChatClientProps = {
-  thread?: string;
-};
-
-const ChatClient: React.FC<ChatClientProps> = ({thread}) => {
+const ChatClient: React.FC<ChatClientProps> = ({thread, models}) => {
   const [threadId ] = useState<string>(thread ?? nanoid()); // setThreadId
-  const [input, setInput] = useState('');
-  const [model, setModel] = useState<string>(models[1].id);
+  const [usage, setUsage] = useState<TokenUsage>();
+  const [input, setInput] = useState('Create a dataset of birthrate of Cats and Dogs for the last 10 years and graph the results.');
+  const [model, setModel] = useState<string>(models[0].id);
   const [tool, setTool] = useState<string>(toolChoices[0].value);
   const [modelSelectorOpen, setModelSelectorOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const { messages, sendMessage, status, regenerate, stop } = useChat();
-  //const typedMessages = messages as ExtendedMessage[];
+  const { messages, sendMessage, status, regenerate, stop } = useChat<BaseMessage>({
+    onFinish({ message }) {
+      console.log("usage", message.metadata?.usage);
+      setUsage(message.metadata?.usage);
+    },
+  });
 
   const selectedModel = models.find((m) => m.id === model);
 
@@ -344,7 +431,7 @@ const ChatClient: React.FC<ChatClientProps> = ({thread}) => {
         body: {
           thread: threadId,
           model: selectedModel?.id,
-          provider: selectedModel?.chefSlug,
+          //provider: selectedModel?.chefSlug,
           choice: tool,
         },
       },
@@ -356,7 +443,6 @@ const ChatClient: React.FC<ChatClientProps> = ({thread}) => {
     setInput(suggestion);
   };
 
-  
   
   // Helper: render one part using all AI Elements we know about
   const renderPart = (
@@ -370,18 +456,67 @@ const ChatClient: React.FC<ChatClientProps> = ({thread}) => {
       index === message.parts.length - 1;
 
     switch (part.type) {
+      // case 'source-document':
+      //   return (
+      //     <div key={`${message.id}-${index}`}>
+      //       <a href={`${process.env.APP_BASE_URL}/api/download?container=${part?.providerMetadata?.openai?.containerId}&file=${part?.providerMetadata?.openai?.fileId}`} >{part.title}</a>
+      //     </div>
+      //   )
+      // case 'source-url':
+      //   return (
+      //     <div key={`${message.id}-${index}`}>
+      //       <a href={part.url} >{part.title}</a>
+      //     </div>
+      //   )
       case 'tool-code_interpreter':
           return (
             <Tool key={`${message.id}-tool-${index}`}>
               <ToolHeader type={part.type} state={part.state} />
               <ToolContent>
                 <ToolInput input={part.input} />
+                <div className={"space-y-2 p-4"}>
+                  <h4 className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
+                    Result
+                  </h4>
+                  <div className={"overflow-x-auto rounded-md text-xs [&_table]:w-full "} >
+                    {
+                    (() => {
+                      const result = part.output as CodeInterpreterResult | undefined;
+                      const outputs = (Array.isArray(result?.outputs) ? result?.outputs : []) ?? [];
+                      if (outputs.length === 0) return null;
+
+                      return (
+                        <>
+                          {outputs.map((item, i) => {
+                            switch (item.type) {
+                              case "image":
+                                return (
+                                  <Image
+                                    key={i}
+                                    src={item.url}
+                                    width={500}
+                                    height={500}
+                                    alt="output image from sandbox"
+                                  />
+                                );
+
+                              case "logs":
+                                return (
+                                  <CodeBlock key={i} language='log' code={item.logs}></CodeBlock>
+                                );
+
+                              default:
+                                return null;
+                            }
+                          })}
+                        </>
+                      );
+                    })()
+                    }
+                  </div>
+                </div>
                 <ToolOutput
-                  output={
-                    part.output
-                      ? JSON.stringify(part.output, null, 2)
-                      : undefined
-                  }
+                  output={undefined}
                   errorText={part.errorText}
                 />
               </ToolContent>
@@ -499,7 +634,11 @@ const ChatClient: React.FC<ChatClientProps> = ({thread}) => {
               <div key={message.id} className="mb-2">
                 <Message key={`${message.id}`} from={message.role}>
                   <MessageContent className={message.role === 'assistant' ? 'w-full': ''}>
-                    
+
+                  {message.parts.map((part, partIndex) =>
+                    renderPart(message, part, partIndex),
+                  )}
+
                     {message.role === 'assistant' &&
                       message.parts.filter((part) => part.type === 'source-url')
                         .length > 0 && (
@@ -525,9 +664,31 @@ const ChatClient: React.FC<ChatClientProps> = ({thread}) => {
                         </Sources>
                       )}
 
-                  {message.parts.map((part, partIndex) =>
-                    renderPart(message, part, partIndex),
-                  )}
+                    {message.role === 'assistant' &&
+                      message.parts.filter((part) => part.type === 'source-document')
+                        .length > 0 && (
+                        <Sources>
+                          <SourcesTrigger
+                            count={
+                              message.parts.filter(
+                                (part) => part.type === 'source-document',
+                              ).length
+                            }
+                          />
+                          {message.parts
+                            .filter((part) => part.type === 'source-document')
+                            .map((part, i) => (
+                              <SourcesContent key={`${message.id}-${i}`}>
+                                <Source
+                                  key={`${message.id}-${i}`}
+                                  href={`${process.env.APP_BASE_URL}/api/download?container=${part?.providerMetadata?.openai?.containerId}&file=${part?.providerMetadata?.openai?.fileId}`}
+                                  title={part.filename ?? part.title}
+                                />
+                              </SourcesContent>
+                            ))}
+                        </Sources>
+                      )}
+
                   </MessageContent>
                 </Message>
               </div>
@@ -535,17 +696,51 @@ const ChatClient: React.FC<ChatClientProps> = ({thread}) => {
           })}
           </ConversationContent>
         </Conversation>
+        
       </div>
       <div>
-       <Suggestions>
-        {suggestions.map((suggestion) => (
-          <Suggestion
-            key={suggestion}
-            suggestion={suggestion}
-            onClick={() => handleSuggestionClick(suggestion)}
-          />
-        ))}
-      </Suggestions>
+        <div className="flex">
+          <div className='w-9/10'>
+            <ScrollArea className="whitespace-nowrap">
+              <Suggestions>
+                {suggestions.map((suggestion) => (
+                  <Suggestion
+                    key={suggestion}
+                    suggestion={suggestion}
+                    onClick={() => handleSuggestionClick(suggestion)}
+                  />
+                ))}
+              </Suggestions>
+              <ScrollBar orientation="horizontal" className='-mb-3' />
+            </ScrollArea>
+          </div>
+          <div className='w-1/10 pl-2'>
+            <Context
+              maxTokens={selectedModel?.contextLength ?? 0}
+              modelId={selectedModel?.id} 
+              usage={{
+                inputTokens: usage?.inputTokens,
+                outputTokens: usage?.outputTokens,
+                totalTokens: usage?.totalTokens,
+                cachedInputTokens: usage?.cachedInputTokens,
+                reasoningTokens: usage?.reasoningTokens,
+              }}
+              usedTokens={usage?.totalTokens ?? 0}
+            >
+              <ContextTrigger />
+              <ContextContent>
+                <ContextContentHeader />
+                <ContextContentBody>
+                  <ContextInputUsage />
+                  <ContextOutputUsage />
+                  <ContextReasoningUsage />
+                  <ContextCacheUsage />
+                </ContextContentBody>
+                <ContextContentFooter />
+              </ContextContent>
+            </Context>
+          </div>
+        </div>
       </div>
       <div className="h-48">
         <PromptInput
@@ -651,7 +846,18 @@ const ChatClient: React.FC<ChatClientProps> = ({thread}) => {
                   Tool: <PromptInputSelectValue />
                 </PromptInputSelectTrigger>
                 <PromptInputSelectContent>
-                  {toolChoices.map((t) => (
+                  {toolChoiceGroups.default.map((t) => (
+                    <PromptInputSelectItem
+                      key={t.value}
+                      value={t.value}
+                    >
+                      {t.name}
+                    </PromptInputSelectItem>
+                  ))}
+                  <div className='p-1'>
+                    <hr />
+                  </div>
+                   {toolChoiceGroups.tools.map((t) => (
                     <PromptInputSelectItem
                       key={t.value}
                       value={t.value}
