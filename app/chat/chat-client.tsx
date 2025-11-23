@@ -695,7 +695,7 @@ const ChatClient: React.FC<ChatClientProps> = ({thread}) => {
                               <SourcesContent key={`${message.id}-${i}`}>
                                 <Source
                                   key={`${message.id}-${i}`}
-                                  href={`${process.env.APP_BASE_URL}/api/download?container=${part?.providerMetadata?.openai?.containerId}&file=${part?.providerMetadata?.openai?.fileId}`}
+                                  href={`/api/download?container=${part?.providerMetadata?.openai?.containerId}&file=${part?.providerMetadata?.openai?.fileId}`}
                                   title={part.filename ?? part.title}
                                 />
                               </SourcesContent>
