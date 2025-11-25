@@ -35,7 +35,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import type { ChatStatus, FileUIPart, generateId } from "ai";
+import type { ChatStatus, FileUIPart } from "ai";
+import  { generateId } from "ai";
 import {
   CornerDownLeftIcon,
   ImageIcon,

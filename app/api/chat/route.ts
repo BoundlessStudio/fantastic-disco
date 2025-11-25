@@ -22,6 +22,20 @@ import { z } from 'zod';
 
 export const maxDuration = 60;
 
+interface InputDto { 
+  messages: UIMessage[]; 
+  thread: string,
+  model: string,
+  choice: string,
+  thinking: string,
+}
+
+interface WeatherData  {
+  temperature: number,
+  unit: string,
+  forecast: string
+}
+
 interface SandboxResult {
   success: boolean;
   exitCode: number;
@@ -31,20 +45,6 @@ interface SandboxResult {
   duration: number;
   timestamp: string;
   sessionId?: string;
-}
-
-type InputDto = { 
-  messages: UIMessage[]; 
-  thread: string,
-  model: string,
-  choice: string,
-  thinking: string,
-}
-
-type WeatherData = {
-  temperature: number,
-  unit: string,
-  forecast: string
 }
 
 async function getWeather(params: { city: string, unit: string }): Promise<WeatherData> {
@@ -60,7 +60,8 @@ async function getWeather(params: { city: string, unit: string }): Promise<Weath
 }
 
 async function getInstructions(modelMessages: ModelMessage[]) {
-  return 'You are a helpful assistant that can answer questions and help with tasks.';
+  return 'You are a helpful assistant that can answer questions and help with tasks. ' + 
+  'If the user wants to see or download a file in the sandbox use the `sandbox:` url prefix with the path to the file stored in the container and do not return files encoded to base64 string.';
 }
 
 // async function getInstructions(modelMessages: ModelMessage[]) {
@@ -75,7 +76,7 @@ async function getInstructions(modelMessages: ModelMessage[]) {
 //   return instructions;
 // }
 
-
+const normalize = (val: string | undefined): string => typeof val === "string" ? val.replace(/\r?\n/g, "") : "";
 
 export async function POST(req: Request) {
   const {
@@ -86,7 +87,7 @@ export async function POST(req: Request) {
     choice,
   }: InputDto = await req.json();
   
-  const containerId = await getContainerId(thread);
+  // const containerId = await getContainerId(thread);
   
   const tools = {
     // 'web_search': searchTool,
@@ -107,18 +108,40 @@ export async function POST(req: Request) {
           timeoutMs: action.timeoutMs
         };
 
-        const response = await fetch(`${process.env.SANDBOX_BASE_URL}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        });
-
-        if (!response.ok) {
-          throw `Remote shell error: ${response.status} ${response.statusText}`;
+        const url = process.env.SANDBOX_BASE_URL;
+        if (!url) {
+          throw new Error('SANDBOX_BASE_URL is not configured');
         }
 
-        const json = await response.json();
-        return { output: JSON.stringify(json) };
+        let response: Response;
+        try {
+          response = await fetch(`${url}/terminal`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+          });
+        } catch (err) {
+          throw new Error(`Failed to call remote shell: ${(err as Error).message}`);
+        }
+
+        if (!response.ok) {
+          const text = await response.text().catch(() => '');
+          throw new Error(
+            `Remote shell error: ${response.status} ${response.statusText}${
+              text ? ` - body: ${text}` : ''
+            }`,
+          );
+        }
+
+        let result: SandboxResult;
+        try {
+          const json = await response.json();
+          result = json as SandboxResult;
+        } catch (err) {
+          throw new Error(`Failed to parse remote shell response JSON: ${(err as Error).message}`);
+        }
+
+        return { output: result.stdout + result.stderr };
       },
     }),
     // 'weather': tool({
@@ -155,7 +178,7 @@ export async function POST(req: Request) {
     providerOptions: {
       openai: {
         reasoningEffort: thinking,
-        reasoningSummary: 'detail',
+        reasoningSummary: 'detailed',
       },
     },
     experimental_transform: [
@@ -164,7 +187,7 @@ export async function POST(req: Request) {
         chunking: 'line',
       }),
       sandboxUrlTransform<typeof tools>({
-        containerId: containerId
+        containerId: thread
       }),
     ],
   });

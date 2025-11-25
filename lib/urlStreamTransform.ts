@@ -13,10 +13,10 @@ export function sandboxUrlTransform<T extends ToolSet>(opts: {
     >({
       async transform(chunk, controller) {
         if (chunk.type === 'text-delta' && typeof chunk.text === 'string') {
-          // Replace sandbox:/mnt/data/<filename> → /api/download?container=<containerId>&filename=<filename>
+          // Replace sandbox:<filename> → /api/download?container=<containerId>&filename=<filename>
           const replaced = chunk.text.replace(
-            /sandbox:\/mnt\/data\/([^\s)'"]+)/g,
-            `${process.env.APP_BASE_URL}/api/download?container=${opts.containerId}&filename=$1`
+            /sandbox:\/?([^\s)'"]+)/g,
+            (_match, filename) => `${process.env.APP_BASE_URL}/api/download?container=${opts.containerId}&filename=${filename}`,
           );
 
           controller.enqueue({ ...chunk, text: replaced });

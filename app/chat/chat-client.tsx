@@ -393,7 +393,7 @@ const WeatherCard = ({ weather }: WeatherCardProps) => {
 const ChatClient: React.FC<ChatClientProps> = ({thread}) => {
   const [threadId ] = useState<string>(thread);
   const [usage, setUsage] = useState<TokenUsage>();
-  const [input, setInput] = useState('Create a dataset of birthrate of Cats and Dogs for the last 10 years and graph the results.');
+  const [input, setInput] = useState('Create a dataset of birthrate of Cats and Dogs for the last 10 years, graph the results, and show me the the graph.');
   const [model, setModel] = useState<string>(models[1].id);
   const [tool, setTool] = useState<string>(toolChoices[0].value);
   const [reasoning, setReasoning] = useState<string>(effort[2].value);
