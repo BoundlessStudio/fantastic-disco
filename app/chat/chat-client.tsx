@@ -157,13 +157,8 @@ import {
 
 import { CodeBlock } from '@/components/ai-elements/code-block';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import { Model } from '@openrouter/sdk/models';
 import { useChat } from '@ai-sdk/react';
 import type { FileUIPart, UIMessage } from 'ai';
-import { nanoid } from 'nanoid';
-
-
-
 
 type CodeInterpreterOutput =
 | { type: "image"; url: string }
@@ -191,7 +186,7 @@ type BaseMessage = UIMessage<ChatMessageMetadata>;
 type BaseMessagePart = BaseMessage['parts'][number];
 
 type ChatClientProps = {
-  thread?: string
+  thread: string
 };
 
 // You can expand this to the full multi-provider shape like in the example if you want
@@ -396,12 +391,12 @@ const WeatherCard = ({ weather }: WeatherCardProps) => {
 }
 
 const ChatClient: React.FC<ChatClientProps> = ({thread}) => {
-  const [threadId ] = useState<string>(thread ?? nanoid()); // setThreadId
+  const [threadId ] = useState<string>(thread);
   const [usage, setUsage] = useState<TokenUsage>();
   const [input, setInput] = useState('Create a dataset of birthrate of Cats and Dogs for the last 10 years and graph the results.');
-  const [model, setModel] = useState<string>(models[0].id);
+  const [model, setModel] = useState<string>(models[1].id);
   const [tool, setTool] = useState<string>(toolChoices[0].value);
-  const [reasoning, setReasoning] = useState<string>(effort[0].value);
+  const [reasoning, setReasoning] = useState<string>(effort[2].value);
   const [modelSelectorOpen, setModelSelectorOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -575,6 +570,7 @@ const ChatClient: React.FC<ChatClientProps> = ({thread}) => {
           );
       case 'tool-web_search':
       case 'tool-web_extract':
+      case 'tool-local_shell':
         return (
             <Tool key={`${message.id}-tool-${index}`}>
               <ToolHeader type={part.type} state={part.state} />

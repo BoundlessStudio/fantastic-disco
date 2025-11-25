@@ -1,11 +1,12 @@
 import Link from "next/link";
-import { Circle } from "lucide-react";
 import { auth0 } from "@/lib/auth0";
 import ChatClient from "@/app/chat/chat-client";
+import { generateId } from "@/lib/threads";
 
 export default async function Page() {
   const session = await auth0.getSession();
   const isAuthenticated = Boolean(session?.user);
+  const id = generateId();
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white via-white to-slate-50 pb-12">
@@ -47,7 +48,7 @@ export default async function Page() {
           <p className="text-sm uppercase tracking-wide text-white/70"> Live preview</p>
           <h2 className="mt-2 text-3xl font-semibold">Chat workspace</h2>
           <div className="mt-6 h-[600px] rounded-xl border border-white/20 bg-white text-black">
-            <ChatClient />
+            <ChatClient thread={id} />
           </div>
         </div>
 

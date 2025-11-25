@@ -1,7 +1,7 @@
-import { nanoid } from "nanoid";
+import { generateId } from "@/lib/threads";
 import { redirect } from "next/navigation";
 
 export default function ChatIndex() {
-  const id = nanoid();
+  const id = generateId();
   redirect(`/chat/${id}`);
 }

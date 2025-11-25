@@ -22,6 +22,17 @@ import { z } from 'zod';
 
 export const maxDuration = 60;
 
+interface SandboxResult {
+  success: boolean;
+  exitCode: number;
+  stdout: string;
+  stderr: string;
+  command: string;
+  duration: number;
+  timestamp: string;
+  sessionId?: string;
+}
+
 type InputDto = { 
   messages: UIMessage[]; 
   thread: string,
@@ -64,40 +75,7 @@ async function getInstructions(modelMessages: ModelMessage[]) {
 //   return instructions;
 // }
 
-// interface ExecResult {
-//   /**
-//    * Whether the command succeeded (exitCode === 0)
-//    */
-//   success: boolean;
-//   /**
-//    * Process exit code
-//    */
-//   exitCode: number;
-//   /**
-//    * Standard output content
-//    */
-//   stdout: string;
-//   /**
-//    * Standard error content
-//    */
-//   stderr: string;
-//   /**
-//    * Command that was executed
-//    */
-//   command: string;
-//   /**
-//    * Execution duration in milliseconds
-//    */
-//   duration: number;
-//   /**
-//    * ISO timestamp when command started
-//    */
-//   timestamp: string;
-//   /**
-//    * Session ID if provided
-//    */
-//   sessionId?: string;
-// }
+
 
 export async function POST(req: Request) {
   const {
@@ -111,43 +89,56 @@ export async function POST(req: Request) {
   const containerId = await getContainerId(thread);
   
   const tools = {
-    'web_search': searchTool,
-    'web_extract': extractTool,
-    'image_generation': openai.tools.imageGeneration({ 
-      outputFormat: 'webp',
-    }),
-    "code_interpreter": openai.tools.codeInterpreter({
-      container: containerId
-    }),
-    // "local_shell": openai.tools.localShell({
-    //   async execute({ action }) {
-    //     // action.command
-    //     // action.env
-    //     // action.timeoutMs
-    //     // action.type
-    //     // action.user
-    //     // action.workingDirectory
-    //     return { output: "" };
-    //   },
+    // 'web_search': searchTool,
+    // 'web_extract': extractTool,
+    // 'image_generation': openai.tools.imageGeneration({ 
+    //   outputFormat: 'webp',
     // }),
-    'weather': tool({
-      description: 'Get the current weather.',
-      inputSchema: z.object({
-        city: z.string().describe('The city to get the weather for'),
-        unit: z
-          .enum(['C', 'F'])
-          .describe('The unit to display the temperature in'),
-      }),
-      outputSchema: z.object({
-        temperature:  z.number(),
-        unit:  z.string(),
-        forecast:  z.string(),
-      }),
-      async execute({ city, unit } /* , { abortSignal, messages }*/) {
-        const weather = await getWeather({ city, unit });
-        return weather;
+    // "code_interpreter": openai.tools.codeInterpreter({
+    //   container: containerId
+    // }),
+    "local_shell": openai.tools.localShell({
+      async execute({ action }) {
+        const body = {
+          id: thread,
+          command: action.command,
+          workingDirectory: action.workingDirectory,
+          env: action.env,
+          timeoutMs: action.timeoutMs
+        };
+
+        const response = await fetch(`${process.env.SANDBOX_BASE_URL}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+
+        if (!response.ok) {
+          throw `Remote shell error: ${response.status} ${response.statusText}`;
+        }
+
+        const json = await response.json();
+        return { output: JSON.stringify(json) };
       },
     }),
+    // 'weather': tool({
+    //   description: 'Get the current weather.',
+    //   inputSchema: z.object({
+    //     city: z.string().describe('The city to get the weather for'),
+    //     unit: z
+    //       .enum(['C', 'F'])
+    //       .describe('The unit to display the temperature in'),
+    //   }),
+    //   outputSchema: z.object({
+    //     temperature:  z.number(),
+    //     unit:  z.string(),
+    //     forecast:  z.string(),
+    //   }),
+    //   async execute({ city, unit } /* , { abortSignal, messages }*/) {
+    //     const weather = await getWeather({ city, unit });
+    //     return weather;
+    //   },
+    // }),
   } as ToolSet;
 
   const modelMessages = convertToModelMessages(messages, { tools });
@@ -156,7 +147,7 @@ export async function POST(req: Request) {
   const result = streamText({
     abortSignal: req.signal,
     model: openai(model),
-    stopWhen: stepCountIs(5),
+    stopWhen: stepCountIs(50),
     system: instructions,
     tools: tools,
     toolChoice: choice as ToolChoice<typeof tools>,
@@ -164,7 +155,7 @@ export async function POST(req: Request) {
     providerOptions: {
       openai: {
         reasoningEffort: thinking,
-        reasoningSummary: 'auto',
+        reasoningSummary: 'detail',
       },
     },
     experimental_transform: [

@@ -35,7 +35,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import type { ChatStatus, FileUIPart } from "ai";
+import type { ChatStatus, FileUIPart, generateId } from "ai";
 import {
   CornerDownLeftIcon,
   ImageIcon,
@@ -46,7 +46,6 @@ import {
   SquareIcon,
   XIcon,
 } from "lucide-react";
-import { nanoid } from "nanoid";
 import {
   type ChangeEvent,
   type ChangeEventHandler,
@@ -165,7 +164,7 @@ export function PromptInputProvider({
     setAttachements((prev) =>
       prev.concat(
         incoming.map((file) => ({
-          id: nanoid(),
+          id: generateId(),
           type: "file" as const,
           url: URL.createObjectURL(file),
           mediaType: file.type,
@@ -530,7 +529,7 @@ export const PromptInput = ({
         const next: (FileUIPart & { id: string })[] = [];
         for (const file of capped) {
           next.push({
-            id: nanoid(),
+            id: generateId(),
             type: "file",
             url: URL.createObjectURL(file),
             mediaType: file.type,
