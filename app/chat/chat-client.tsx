@@ -1,6 +1,7 @@
 'use client';
 import { useState, useRef } from 'react';
-import { CheckIcon, CopyIcon, RefreshCcwIcon, Sun  } from 'lucide-react';
+import { CheckIcon, CopyIcon, RefreshCcwIcon, Terminal, Search, ImageIcon } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import Image from "next/image";
 
 import {
@@ -189,143 +190,82 @@ type ChatClientProps = {
   thread: string
 };
 
+
+type ToolOption = {
+  icon: LucideIcon;
+  name: string;
+  value: string;
+};
+
 // You can expand this to the full multi-provider shape like in the example if you want
 const models = [
-  {
-    id: 'openai/gpt-5.1',
-    name: 'GPT 5.1',
-    provider: 'openai',
-    model: "gpt-5.1",
-    contextLength: 400_000,
-  },
   {
     id: 'openai/gpt-5.1-codex',
     name: 'GPT 5.1 codex',
     provider: 'openai',
     model: "gpt-5.1-codex",
     contextLength: 400_000,
+    tools: [
+      {
+        icon: Terminal,
+        name: 'Terminal',
+        value: 'local_shell', 
+      },
+      {
+        icon: Search,
+        name: 'Web Search',
+        value: 'web_search', 
+      },
+      {
+        icon: Search,
+        name: "Read Web Page",
+        value: 'web_extract'
+      }
+    ]
   },
   {
-    id: 'openai/gpt-5',
-    name: 'GPT 5',
+    id: 'openai/gpt-5.1',
+    name: 'GPT 5.1',
     provider: 'openai',
-    model: "gpt-5-2025-08-07",
+    model: "gpt-5.1",
     contextLength: 400_000,
-  },
-  {
-    id: 'openai/gpt-5-mini',
-    name: 'GPT 5 mini',
-    provider: 'openai',
-    model: "gpt-5-mini-2025-08-07",
-    contextLength: 400_000,
-  },
-  {
-    id: 'openai/gpt-5-nano',
-    name: 'GPT 5 nano',
-    provider: 'openai',
-    model: "gpt-5-nano-2025-08-07",
-    contextLength: 400_000,
-  },
-  {
-    id: 'openai/gpt-5-codex',
-    name: 'GPT 5 codex',
-    provider: 'openai',
-    model: "gpt-5-codex",
-    contextLength: 400_000,
-  },
-];
-
-const toolChoiceGroups = {
-  default: [
-    {
-      name: 'Auto',
-      value: 'auto',
-    },
-    {
-      name: 'None',
-      value: 'none',
-    },
-    {
-      name: 'Required',
-      value: 'required',
-    },
-  ],
-  tools: [
-    {
-      name: 'Web Search',
-      value: 'web_search',
-    },
-    {
-      name: 'Web Extract',
-      value: 'web_extract',
-    },
-    {
-      name: 'Weather',
-      value: 'weather',
-    },
-    {
-      name: 'Image Generation',
-      value: 'image_generation',
-    },
-    {
-      name: 'Code Interpreter',
-      value: 'code_interpreter',
-    },
-  ]
-};
-
-const toolChoices = [
-  {
-    name: 'Auto',
-    value: 'auto',
-  },
-  {
-    name: 'None',
-    value: 'none',
-  },
-  {
-    name: 'Required',
-    value: 'required',
-  },
-  {
-    name: 'Web Search',
-    value: 'web_search',
-  },
-  {
-    name: 'Web Extract',
-    value: 'web_extract',
-  },
-  {
-    name: 'Weather',
-    value: 'weather',
-  },
-  {
-    name: 'Image Generation',
-    value: 'image_generation',
-  },
-  {
-    name: 'Code Interpreter',
-    value: 'code_interpreter',
+    tools:  [
+      {
+        icon: ImageIcon,
+        name: 'Image Generation',
+        value: 'image_generation', 
+      },
+      {
+        icon: Search,
+        name: 'Web Search',
+        value: 'web_search', 
+      },
+      {
+        icon: Search,
+        name: "Read Web Page",
+        value: 'web_extract'
+      }
+    ]
   },
 ];
 
 const effort = [
   {
-    name: 'Instance',
-    value: 'none'
-  },
-  {
-    name: 'Low Reasoning',
-    value: 'low'
+    name: 'High Reasoning',
+    value: 'high'
   },
   {
     name: 'Medium Reasoning',
     value: 'medium'
   },
   {
-    name: 'High Reasoning',
-    value: 'high'
-  }
+    name: 'Low Reasoning',
+    value: 'low'
+  },
+  // {
+  //   name: 'Instance',
+  //   value: 'none'
+  // },
 ];
 
 const suggestions = [
@@ -360,49 +300,19 @@ async function uploadBlobToStorage(
   return url as string;
 }
 
-type Weather = {
-  temperature: string;
-  unit: string;
-  forecast: string;
-};
-
-interface WeatherCardProps {
-  weather: Weather;
-}
-
-const WeatherCard = ({ weather }: WeatherCardProps) => {
-  const { temperature, unit, forecast } = weather;
-
-   return (
-    <div className="relative rounded-lg border p-4 flex flex-col gap-2 bg-gradient-to-br from-sky-100 to-sky-300 overflow-hidden">
-      {/* Sun Icon */}
-      <Sun
-        className="absolute right-3 top-3 h-10 w-10 text-yellow-500 opacity-70 pointer-events-none"
-        strokeWidth={2}
-      />
-
-      <div className="text-xl font-semibold">
-        {temperature}°{unit}
-      </div>
-
-      <div className="text-muted-foreground">{forecast}</div>
-    </div>
-  );
-}
 
 const ChatClient: React.FC<ChatClientProps> = ({thread}) => {
   const [threadId ] = useState<string>(thread);
   const [usage, setUsage] = useState<TokenUsage>();
   const [input, setInput] = useState('Create a dataset of birthrate of Cats and Dogs for the last 10 years, graph the results, and show me the the graph.');
-  const [model, setModel] = useState<string>(models[1].id);
-  const [tool, setTool] = useState<string>(toolChoices[0].value);
-  const [reasoning, setReasoning] = useState<string>(effort[2].value);
+  const [model, setModel] = useState<string>(models[0].id);
+  const [tools, setTools] = useState<ToolOption[]>(models[0].tools);
+  const [reasoning, setReasoning] = useState<string>(effort[0].value);
   const [modelSelectorOpen, setModelSelectorOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const { messages, sendMessage, status, regenerate, stop } = useChat<BaseMessage>({
     onFinish({ message }) {
-      console.log("usage", message.metadata?.usage);
       setUsage(message.metadata?.usage);
     },
   });
@@ -451,7 +361,7 @@ const ChatClient: React.FC<ChatClientProps> = ({thread}) => {
         body: {
           thread: threadId,
           model: selectedModel?.model,
-          choice: tool,
+          tools: tools.map(t => t.value),
           thinking: reasoning
         },
       },
@@ -556,18 +466,6 @@ const ChatClient: React.FC<ChatClientProps> = ({thread}) => {
             )}
           </div>
         );
-      case 'tool-weather':
-        return (
-          (part.state == 'output-available') ?
-            <WeatherCard key={`${message.id}-tool-${index}`} weather={part.output as Weather} />
-          :
-          <Tool key={`${message.id}-tool-${index}`}>
-              <ToolHeader type={part.type} state={part.state} />
-              <ToolContent className="">
-                <ToolInput input={part.input} />
-              </ToolContent>
-            </Tool>
-          );
       case 'tool-web_search':
       case 'tool-web_extract':
       case 'tool-local_shell':
@@ -668,31 +566,6 @@ const ChatClient: React.FC<ChatClientProps> = ({thread}) => {
                                   key={`${message.id}-${i}`}
                                   href={part.url}
                                   title={part.url}
-                                />
-                              </SourcesContent>
-                            ))}
-                        </Sources>
-                      )}
-
-                    {message.role === 'assistant' &&
-                      message.parts.filter((part) => part.type === 'source-document')
-                        .length > 0 && (
-                        <Sources>
-                          <SourcesTrigger
-                            count={
-                              message.parts.filter(
-                                (part) => part.type === 'source-document',
-                              ).length
-                            }
-                          />
-                          {message.parts
-                            .filter((part) => part.type === 'source-document')
-                            .map((part, i) => (
-                              <SourcesContent key={`${message.id}-${i}`}>
-                                <Source
-                                  key={`${message.id}-${i}`}
-                                  href={`/api/download?container=${part?.providerMetadata?.openai?.containerId}&file=${part?.providerMetadata?.openai?.fileId}`}
-                                  title={part.filename ?? part.title}
                                 />
                               </SourcesContent>
                             ))}
@@ -818,6 +691,7 @@ const ChatClient: React.FC<ChatClientProps> = ({thread}) => {
                               key={m.id}
                               onSelect={() => {
                                 setModel(m.id);
+                                setTools(m.tools)
                                 setModelSelectorOpen(false);
                               }}
                               value={m.id}
@@ -853,45 +727,30 @@ const ChatClient: React.FC<ChatClientProps> = ({thread}) => {
                       key={t.value}
                       value={t.value}
                     >
-                      {t.name}
+                       {t.name}
                     </PromptInputSelectItem>
                   ))}
                 </PromptInputSelectContent>
               </PromptInputSelect>
 
               {/* Tool-choice dropdown */}
-              <PromptInputSelect
-                onValueChange={(value) => {
-                  setTool(value);
-                }}
-                value={tool}
-              >
+              <PromptInputSelect>
                 <PromptInputSelectTrigger>
-                  Tool: <PromptInputSelectValue />
+                  Enabled Tools
                 </PromptInputSelectTrigger>
                 <PromptInputSelectContent>
-                  {toolChoiceGroups.default.map((t) => (
+                   {tools.map((t) => (
                     <PromptInputSelectItem
                       key={t.value}
                       value={t.value}
                     >
-                      {t.name}
-                    </PromptInputSelectItem>
-                  ))}
-                  <div className='p-1'>
-                    <hr />
-                  </div>
-                   {toolChoiceGroups.tools.map((t) => (
-                    <PromptInputSelectItem
-                      key={t.value}
-                      value={t.value}
-                    >
+                      <t.icon className="h-4 w-4" />
                       {t.name}
                     </PromptInputSelectItem>
                   ))}
                 </PromptInputSelectContent>
               </PromptInputSelect>
-            </PromptInputTools>
+            </PromptInputTools> 
 
             <PromptInputSubmit status={status} />
           </PromptInputFooter>

@@ -1,5 +1,5 @@
 import ChatClient from "@/app/chat/chat-client";
-import { withAuth } from "@/lib/with-auth";
+import { withAuth } from "@/lib/auth0";
 import { redirect } from "next/navigation";
 
 type PageProps = {

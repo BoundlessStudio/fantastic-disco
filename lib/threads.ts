@@ -6,4 +6,4 @@ const options = {
   alphabet:"0123456789abcdefghijklmnopqrstuvwxyz", 
   separator: undefined,
 };
-export const generateId = createIdGenerator(options);
+export const generateThreadId = createIdGenerator(options);

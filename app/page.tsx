@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { auth0 } from "@/lib/auth0";
 import ChatClient from "@/app/chat/chat-client";
-import { generateId } from "@/lib/threads";
+import { generateThreadId } from "@/lib/threads";
 
 export default async function Page() {
   const session = await auth0.getSession();
   const isAuthenticated = Boolean(session?.user);
-  const id = generateId();
+  const id = generateThreadId();
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white via-white to-slate-50 pb-12">

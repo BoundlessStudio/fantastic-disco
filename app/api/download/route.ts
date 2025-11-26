@@ -17,12 +17,12 @@ export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
     const container = url.searchParams.get("container");
-    const filename = url.searchParams.get("filename");
+    const filename = url.searchParams.get("file");
 
     // TODO: add Cache
 
     const sandboxURL = process.env.SANDBOX_BASE_URL;
-    if (!url) {
+    if (!sandboxURL) {
       throw new Error('SANDBOX_BASE_URL is not configured');
     }
 
@@ -48,13 +48,12 @@ export async function GET(req: Request) {
     }
 
     const body = {
-      id: container,
       path: filename,
     };
 
     let response: Response;
     try {
-      response = await fetch(`${sandboxURL}/file/read`, {
+      response = await fetch(`${sandboxURL}/file/read?id=${container}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
          body: JSON.stringify(body),
