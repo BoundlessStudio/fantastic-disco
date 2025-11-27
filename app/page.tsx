@@ -44,7 +44,7 @@ export default async function Page() {
         </div>
 
         {/* Live preview */}
-        <div className="w-full rounded-xl border border-dashed border-black/10 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 p-12 text-left text-white shadow-2xl">
+        <div className="w-full rounded-xl border border-dashed border-black/10 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 p-2 md:p-12 text-left text-white shadow-2xl">
           <p className="text-sm uppercase tracking-wide text-white/70"> Live preview</p>
           <h2 className="mt-2 text-3xl font-semibold">Chat workspace</h2>
           <div className="mt-6 h-[600px] rounded-xl border border-white/20 bg-white text-black">

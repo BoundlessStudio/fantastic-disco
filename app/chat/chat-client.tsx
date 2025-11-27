@@ -1,6 +1,6 @@
 'use client';
 import { useState, useRef } from 'react';
-import { CheckIcon, CopyIcon, RefreshCcwIcon, Terminal, Search, ImageIcon } from 'lucide-react';
+import { CheckIcon, CopyIcon, RefreshCcwIcon, Terminal, Search, ImageIcon, Brain, PencilRuler } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import Image from "next/image";
 
@@ -231,6 +231,11 @@ const models = [
     contextLength: 400_000,
     tools:  [
       {
+        icon: Terminal,
+        name: 'Code Interpreter',
+        value: 'code_interpreter', 
+      },
+      {
         icon: ImageIcon,
         name: 'Image Generation',
         value: 'image_generation', 
@@ -269,10 +274,26 @@ const effort = [
 ];
 
 const suggestions = [
-  'find arcades where i live.',
-  'what is the weather where i live?',
-  'what do you see in the image?',
-  'summarize the latest AI news.',
+  {
+    title: 'Search Arcades',
+    value: 'find arcades where i live.'
+  },
+  {
+    title: 'Local Weather',
+    value: 'what is the weather where i live?'
+  },
+  {
+    title: 'Describe Image',
+    value: 'what do you see in the image?'
+  },
+  {
+    title: 'AI News',
+    value: 'summarize the latest AI news'
+  },
+  {
+    title: 'Birthrate Dataset',
+    value: 'Create a dataset of birthrate of Cats and Dogs for the last 10 years, graph the results, and show me the the graph.'
+  },
 ];
 
 async function dataUrlToBlob(dataUrl: string): Promise<Blob> {
@@ -304,7 +325,7 @@ async function uploadBlobToStorage(
 const ChatClient: React.FC<ChatClientProps> = ({thread}) => {
   const [threadId ] = useState<string>(thread);
   const [usage, setUsage] = useState<TokenUsage>();
-  const [input, setInput] = useState('Create a dataset of birthrate of Cats and Dogs for the last 10 years, graph the results, and show me the the graph.');
+  const [input, setInput] = useState('');
   const [model, setModel] = useState<string>(models[0].id);
   const [tools, setTools] = useState<ToolOption[]>(models[0].tools);
   const [reasoning, setReasoning] = useState<string>(effort[0].value);
@@ -390,7 +411,7 @@ const ChatClient: React.FC<ChatClientProps> = ({thread}) => {
       case 'tool-code_interpreter':
           return (
             <Tool key={`${message.id}-tool-${index}`}>
-              <ToolHeader type={part.type} state={part.state} />
+              <ToolHeader title='Code Interpreter' type={part.type} state={part.state} />
               <ToolContent>
                 <ToolInput input={part.input} />
                 <div className={"space-y-2 p-4"}>
@@ -445,7 +466,7 @@ const ChatClient: React.FC<ChatClientProps> = ({thread}) => {
         return (
           <div key={`${message.id}-tool-${index}`}>
             <Tool>
-              <ToolHeader type={part.type} state={part.state} />
+              <ToolHeader title='Image Generation' type={part.type} state={part.state} />
               <ToolContent>
                 <ToolInput input={part.input} />
                 <ToolOutput
@@ -467,11 +488,43 @@ const ChatClient: React.FC<ChatClientProps> = ({thread}) => {
           </div>
         );
       case 'tool-web_search':
+         return (
+            <Tool key={`${message.id}-tool-${index}`}>
+              <ToolHeader title='Web Search' type={part.type} state={part.state} />
+              <ToolContent>
+                <ToolInput input={part.input} />
+                <ToolOutput
+                  output={
+                    part.output
+                      ? JSON.stringify(part.output, null, 2)
+                      : undefined
+                  }
+                  errorText={part.errorText}
+                />
+              </ToolContent>
+            </Tool>
+          );
       case 'tool-web_extract':
+         return (
+            <Tool key={`${message.id}-tool-${index}`}>
+              <ToolHeader title='Read Web Page' type={part.type} state={part.state} />
+              <ToolContent>
+                <ToolInput input={part.input} />
+                <ToolOutput
+                  output={
+                    part.output
+                      ? JSON.stringify(part.output, null, 2)
+                      : undefined
+                  }
+                  errorText={part.errorText}
+                />
+              </ToolContent>
+            </Tool>
+          );
       case 'tool-local_shell':
         return (
             <Tool key={`${message.id}-tool-${index}`}>
-              <ToolHeader type={part.type} state={part.state} />
+              <ToolHeader title='Terminal' type={part.type} state={part.state} />
               <ToolContent>
                 <ToolInput input={part.input} />
                 <ToolOutput
@@ -583,14 +636,14 @@ const ChatClient: React.FC<ChatClientProps> = ({thread}) => {
       </div>
       <div>
         <div className="flex">
-          <div className='w-9/10'>
+          <div className='hidden md:block w-9/10'>
             <ScrollArea className="whitespace-nowrap">
               <Suggestions>
-                {suggestions.map((suggestion) => (
+                {suggestions.map((s) => (
                   <Suggestion
-                    key={suggestion}
-                    suggestion={suggestion}
-                    onClick={() => handleSuggestionClick(suggestion)}
+                    key={s.value}
+                    suggestion={s.title}
+                    onClick={() => handleSuggestionClick(s.value)}
                   />
                 ))}
               </Suggestions>
@@ -661,7 +714,7 @@ const ChatClient: React.FC<ChatClientProps> = ({thread}) => {
                 textareaRef={textareaRef}
               />
 
-              {/* Model Selector (AI Elements) */}
+               {/* Model Selector (AI Elements) */}
               <ModelSelector
                 onOpenChange={setModelSelectorOpen}
                 open={modelSelectorOpen}
@@ -669,12 +722,7 @@ const ChatClient: React.FC<ChatClientProps> = ({thread}) => {
                 <ModelSelectorTrigger asChild>
                   <PromptInputButton>
                     {selectedModel?.provider && (
-                      <ModelSelectorLogo provider={selectedModel.provider} />
-                    )}
-                    {selectedModel?.name && (
-                      <ModelSelectorName>
-                        {selectedModel.name}
-                      </ModelSelectorName>
+                      <ModelSelectorLogo provider={selectedModel.provider} className='size-4' />
                     )}
                   </PromptInputButton>
                 </ModelSelectorTrigger>
@@ -718,8 +766,9 @@ const ChatClient: React.FC<ChatClientProps> = ({thread}) => {
                 }}
                 value={reasoning}
               >
-                <PromptInputSelectTrigger>
-                  <PromptInputSelectValue />
+                <PromptInputSelectTrigger >
+                  {/* <PromptInputSelectValue /> */}
+                  <Brain />
                 </PromptInputSelectTrigger>
                 <PromptInputSelectContent>
                   {effort.map((t) => (
@@ -732,11 +781,11 @@ const ChatClient: React.FC<ChatClientProps> = ({thread}) => {
                   ))}
                 </PromptInputSelectContent>
               </PromptInputSelect>
-
+            
               {/* Tool-choice dropdown */}
               <PromptInputSelect>
-                <PromptInputSelectTrigger>
-                  Enabled Tools
+                <PromptInputSelectTrigger className='hidden md:flex'>
+                  <PencilRuler />
                 </PromptInputSelectTrigger>
                 <PromptInputSelectContent>
                    {tools.map((t) => (
