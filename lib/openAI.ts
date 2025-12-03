@@ -31,9 +31,7 @@ export async function getContainerFileByName(
     const collection = await openAIClient.containers.files.list(container_id);
     for await (const file of collection) {
       if (file.path.endsWith(filename)) {
-        const response = await openAIClient.containers.files.content.retrieve(file.id, {
-          container_id: container_id,
-        });
+        const response = await openAIClient.containers.files.content.retrieve(container_id, file.id);
 
         // This is already an ArrayBuffer and is valid BodyInit
         const data = await response.arrayBuffer();
@@ -53,12 +51,8 @@ export async function getContainerFileById(
 ): Promise<{data:ArrayBuffer, name:string} | null> {
   try 
   {
-    const file = await openAIClient.containers.files.retrieve(file_id, {
-      container_id: container_id,
-    });
-    const response = await openAIClient.containers.files.content.retrieve(file_id, {
-      container_id: container_id,
-    });
+    const file = await openAIClient.containers.files.retrieve(container_id, file_id);
+    const response = await openAIClient.containers.files.content.retrieve(container_id, file_id);
     
     const name = path.basename(file.path);
     const data = await response.arrayBuffer();

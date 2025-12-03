@@ -56,9 +56,7 @@ export  async function getBlobUrlForSandboxFile(
     const collection = await openAIClient.containers.files.list(containerId);
     for await (const file of collection) {
       if (file.path.endsWith(`${filename}`)) {
-        const response = await openAIClient.containers.files.content.retrieve(file.id, {
-          container_id: containerId,
-        });
+        const response = await openAIClient.containers.files.content.retrieve(containerId, file.id);
       
         const data = await response.arrayBuffer();
         const contentType = response.headers.get("Content-Type") ?? 'application/octet-stream';
@@ -82,13 +80,9 @@ export async function getBlobUrlForSourceDocument(
 ): Promise<Blob | undefined> {
   try 
   {
-    const file = await openAIClient.containers.files.retrieve(fileId, { 
-      container_id: containerId
-    });
+    const file = await openAIClient.containers.files.retrieve(containerId, fileId);
 
-    const response = await openAIClient.containers.files.content.retrieve(fileId, {
-      container_id: containerId,
-    });
+    const response = await openAIClient.containers.files.content.retrieve(containerId, fileId);
 
     const data = await response.arrayBuffer();
     const filename =  path.basename(file.path);
